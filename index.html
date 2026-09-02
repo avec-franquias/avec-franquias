@@ -32,7 +32,6 @@
   }
   .wrap{max-width:1120px; margin:0 auto; padding:22px 18px 60px}
 
-  /* ---------- topo ---------- */
   header.top{
     display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; justify-content:space-between;
     padding-bottom:14px; border-bottom:2px solid var(--ink); margin-bottom:20px;
@@ -56,7 +55,6 @@
     outline:2px solid var(--accent); outline-offset:2px;
   }
 
-  /* ---------- estrutura ---------- */
   .grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.05fr); gap:18px; align-items:start}
   @media (max-width:880px){ .grid{grid-template-columns:1fr} }
   section.card{
@@ -68,9 +66,7 @@
     font-size:16px; letter-spacing:-.01em; margin:0 0 3px;
   }
   .hint{color:var(--ink-3); font-size:12.5px; margin:0 0 14px}
-  .hint code{background:var(--line-2); padding:1px 4px; border-radius:4px; font-size:11.5px}
 
-  /* ---------- campos ---------- */
   .field{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 0}
   .field + .field{border-top:1px solid var(--line-2)}
   .field label{font-size:13.5px; color:var(--ink-2)}
@@ -83,7 +79,6 @@
   }
   select{text-align:left; width:auto; min-width:150px}
   input[type=text]:hover{border-color:var(--ink-3)}
-  .money{position:relative}
   .subhead{
     font-size:12.5px; font-weight:600; color:var(--accent);
     margin:16px 0 4px; padding-bottom:5px; border-bottom:1px solid var(--accent-soft);
@@ -93,7 +88,6 @@
   .calcline span:first-child{color:var(--ink-2)}
   .calcline span:last-child{font-weight:600}
 
-  /* ---------- resultado ---------- */
   .result{
     background:var(--panel); border:1px solid var(--line); border-top:4px solid var(--accent);
     border-radius:var(--r); padding:18px; box-shadow:var(--shadow); margin-bottom:18px;
@@ -114,19 +108,13 @@
   .flag.alert{background:#fdf3e3; color:var(--warn)}
   .flag.none{display:none}
 
-  /* ---------- próximo nível ---------- */
   section.card.next{border-left:4px solid var(--accent)}
   .nextrow{
     display:flex; flex-wrap:wrap; gap:18px 26px; align-items:flex-end;
     padding:4px 0 14px; margin-bottom:8px; border-bottom:1px solid var(--line-2);
   }
   .nextrow .big .v{font-size:clamp(22px,3.2vw,30px)}
-  .topo{
-    background:var(--accent-soft); border-radius:8px; padding:14px;
-    font-size:13.5px; color:var(--ink-2);
-  }
 
-  /* ---------- escada de tiers ---------- */
   table{width:100%; border-collapse:collapse; font-size:13px}
   th{
     text-align:right; font-weight:600; font-size:11.5px; color:var(--ink-3);
@@ -144,7 +132,6 @@
   tbody tr.above{color:var(--ink-3)}
   .scroller{overflow-x:auto; margin:0 -4px}
 
-  /* ---------- ações ---------- */
   .actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px}
   button.btn{
     font:inherit; font-size:13px; font-weight:600; cursor:pointer;
@@ -157,7 +144,6 @@
   button.btn.primary:hover{filter:brightness(.93)}
   .saved-note{font-size:12px; color:var(--ink-3); margin-top:9px}
 
-  /* ---------- histórico ---------- */
   .hist-empty{
     border:1px dashed var(--line); border-radius:8px; padding:22px 16px;
     text-align:center; color:var(--ink-3); font-size:13px;
@@ -184,9 +170,6 @@
   }
   .banner.hidden{display:none}
   footer{margin-top:26px; color:var(--ink-3); font-size:12px; border-top:1px solid var(--line); padding-top:14px}
-  @media (prefers-reduced-motion:no-preference){
-    tbody tr.reached{transition:background .2s ease}
-  }
 </style>
 
 <div class="wrap">
@@ -206,7 +189,6 @@
 
   <div class="grid">
 
-    <!-- ============ COLUNA ESQUERDA: ENTRADAS ============ -->
     <div>
       <section class="card">
         <h2>Faturamento MRR + NET Take</h2>
@@ -242,27 +224,8 @@
         <div class="calcline"><span>Ticket médio <span class="cellref">B31</span></span><span id="b31">—</span></div>
       </section>
 
-      <section class="card">
-        <h2>Ocupação da base</h2>
-        <p class="hint">Quantos clientes já usam cada produto, sobre o total da carteira.</p>
-        <div class="field"><label>Total de clientes <span class="cellref">B48</span></label><input type="text" id="b48" inputmode="decimal" placeholder="0"></div>
-        <div class="field"><label>Usam Avec <span class="cellref">B49</span></label><input type="text" id="b49" inputmode="decimal" placeholder="0"><span id="p49" class="tag">—</span></div>
-        <div class="field"><label>Têm nota fiscal <span class="cellref">B50</span></label><input type="text" id="b50" inputmode="decimal" placeholder="0"><span id="p50" class="tag">—</span></div>
-        <div class="field"><label>Têm WhatsApp <span class="cellref">B51</span></label><input type="text" id="b51" inputmode="decimal" placeholder="0"><span id="p51" class="tag">—</span></div>
-        <div class="field"><label>Têm Pay <span class="cellref">B52</span></label><input type="text" id="b52" inputmode="decimal" placeholder="0"><span id="p52" class="tag">—</span></div>
-      </section>
-
-      <section class="card">
-        <h2>Taxa de conversão</h2>
-        <div class="field"><label>Produto <span class="cellref">B59</span></label><input type="text" id="b59" style="text-align:left" placeholder="Avec Pay"></div>
-        <div class="field"><label>Clientes em potencial <span class="cellref">B60</span></label><input type="text" id="b60" inputmode="decimal" placeholder="0"></div>
-        <div class="field"><label>Clientes abordados <span class="cellref">B61</span></label><input type="text" id="b61" inputmode="decimal" placeholder="200"></div>
-        <div class="field"><label>Clientes convertidos <span class="cellref">B62</span></label><input type="text" id="b62" inputmode="decimal" placeholder="0"></div>
-        <div class="calcline"><span>Taxa de conversão <span class="cellref">B63</span></span><span id="b63">—</span></div>
-      </section>
     </div>
 
-    <!-- ============ COLUNA DIREITA: RESULTADO ============ -->
     <div>
       <div class="result">
         <div class="bigrow">
@@ -340,21 +303,9 @@
         <p class="hint" style="margin:10px 0 0">Diferença dividida pelo ticket médio. Na planilha original a receita alvo era fixa no Tier 13; aqui ela segue a meta escolhida acima.</p>
       </section>
 
-      <section class="card">
-        <h2>Plano de ação</h2>
-        <div class="field" style="flex-direction:column; align-items:stretch; gap:6px">
-          <label>Ações de foco <span class="cellref">A37</span></label>
-          <textarea id="acoes" rows="3" style="font:inherit; font-size:14px; width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:7px; resize:vertical"></textarea>
-        </div>
-        <div class="field" style="flex-direction:column; align-items:stretch; gap:6px">
-          <label>Ações de marketing <span class="cellref">A55</span></label>
-          <textarea id="mkt" rows="3" style="font:inherit; font-size:14px; width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:7px; resize:vertical" placeholder="Instagram, tráfego pago, conta comercial, eventos, parcerias, aulão AVEC…"></textarea>
-        </div>
-      </section>
     </div>
   </div>
 
-  <!-- ============ HISTÓRICO ============ -->
   <section class="card">
     <h2>Meus resultados salvos</h2>
     <p class="hint">Tudo fica guardado neste navegador. Salve um fechamento por mês para acompanhar a evolução.</p>
@@ -366,6 +317,7 @@
       <input type="file" id="fileIn" accept="application/json" hidden>
     </div>
     <p class="saved-note" id="savedNote"></p>
+    <p class="hint" id="stStatus" style="margin:8px 0 0">—</p>
     <div id="histWrap" style="margin-top:14px"></div>
   </section>
 
@@ -390,12 +342,6 @@
 (function(){
 "use strict";
 
-/* ===================================================================
-   1. PARÂMETROS EXTRAÍDOS DA PLANILHA (uma aba = uma carteira)
-   alvo     -> multiplicador da coluna B16:B28  (=D7*(1+x))
-   comissao -> coluna D16:D28
-   bandaMax -> coluna K9:K21 (Cresc. Máx da tabela de remuneração)
-   =================================================================== */
 var CARTEIRAS = {
   bronze: {
     nome:"Bronze", cor:"#9a5a2c", piso:0, teto:30000,
@@ -439,13 +385,9 @@ var FORMULAS = [
   ["B41", "=B12",                     "Receita do mês vigente"],
   ["B42", "=C28",                     "Receita alvo (RMV do tier de meta)"],
   ["B43", "=(B42-B41)",               "Diferença que falta faturar"],
-  ["B44", "=(B43/B31)",               "Vendas necessárias: diferença ÷ ticket médio"],
-  ["B63", "=(B62/B61)",               "Taxa de conversão: convertidos ÷ abordados"]
+  ["B44", "=(B43/B31)",               "Vendas necessárias: diferença ÷ ticket médio"]
 ];
 
-/* ===================================================================
-   2. ARMAZENAMENTO — localStorage com queda para memória
-   =================================================================== */
 var KEY = "kater_business_plan_v1";
 var memoria = null, temStorage = true;
 try {
@@ -460,9 +402,11 @@ function lerTudo(){
   } catch(e){ return {campos:{}, historico:[]}; }
 }
 function gravarTudo(dados){
+  dados.ultimaGravacao = new Date().toISOString();
   var cru = JSON.stringify(dados);
   memoria = cru;
   if (temStorage){ try { window.localStorage.setItem(KEY, cru); } catch(e){ temStorage = false; avisoStorage(); } }
+  atualizarStatus();
 }
 function avisoStorage(){
   if (!temStorage) document.getElementById("storageBanner").classList.remove("hidden");
@@ -473,9 +417,6 @@ var estado = lerTudo();
 if (!estado.campos) estado.campos = {};
 if (!estado.historico) estado.historico = [];
 
-/* ===================================================================
-   3. NÚMEROS EM pt-BR
-   =================================================================== */
 function num(v){
   if (v === null || v === undefined) return 0;
   var s = String(v).trim();
@@ -499,16 +440,12 @@ function dec(n, casas){
 }
 function $(id){ return document.getElementById(id); }
 
-/* ===================================================================
-   4. MOTOR DE CÁLCULO — espelha as fórmulas da planilha
-   =================================================================== */
 function calcular(){
   var c = CARTEIRAS[estado.carteira];
 
   /* Janela móvel de 4 meses: M-3, M-2, M-1, M (mês vigente).
      Trimestre passado = M-3, M-2, M-1   -> B5, B6, B7
-     Trimestre atual   = M-2, M-1, M     -> B10, B11, B12
-     Os dois meses do meio entram nas duas janelas, por isso B10=B6 e B11=B7. */
+     Trimestre atual   = M-2, M-1, M     -> B10, B11, B12 */
   var m0=num($("m0").value), m1=num($("m1").value), m2=num($("m2").value), m3=num($("m3").value);
   var B5=m0, B6=m1, B7=m2;
   var B10=m1, B11=m2, B12=m3;
@@ -544,9 +481,6 @@ function calcular(){
           B41:B41,B42:B42,B43:B43,B44:B44};
 }
 
-/* ===================================================================
-   5. RENDERIZAÇÃO
-   =================================================================== */
 function render(){
   var r = calcular(), c = r.c;
   document.documentElement.style.setProperty("--accent", c.cor);
@@ -574,7 +508,6 @@ function render(){
     $("tierNow").textContent = "—"; $("pctNow").textContent = "—"; $("payNow").textContent = "—";
   }
 
-  /* faixa de MRR da carteira */
   var f = $("faixaFlag");
   if (r.D12 > 0){
     var dentro = r.D12 >= c.piso && (c.teto === null || r.D12 < c.teto);
@@ -585,7 +518,6 @@ function render(){
       : "Atenção: a média atual de " + brl(r.D12) + " está fora da faixa " + c.nome + " (" + faixa + "). Confira a carteira selecionada — sugestão: " + sugerir(r.D12) + ".";
   } else { f.className = "flag none"; }
 
-  /* rótulos das duas janelas com os meses reais */
   var ref = $("mesRef").value;
   $("lm0").innerHTML = rotulo(somaMes(ref,-3));
   $("lm1").innerHTML = rotulo(somaMes(ref,-2));
@@ -597,10 +529,8 @@ function render(){
   $("lblAtual").textContent   = "Trimestre atual — " + janAtual;
   $("b35").textContent = janAtual;
 
-  /* próximo nível */
   renderProximo(r);
 
-  /* escada de tiers */
   var linhas = "";
   for (var i=0;i<13;i++){
     var t = r.tiers[i];
@@ -632,34 +562,18 @@ function render(){
   $("ladderHint").textContent = "Faixa de MRR " + c.nome + ": " +
     (c.teto === null ? "acima de " + brl(c.piso) : brl(c.piso) + " a " + brl(c.teto)) + ".";
 
-  /* novas vendas */
   $("b41").textContent = r.B41 ? brl(r.B41) : "—";
   $("b42").textContent = r.D7 > 0 ? brl(r.B42) : "—";
   $("b43").textContent = r.D7 > 0 ? brl(r.B43) : "—";
   $("b44").textContent = isFinite(r.B44) ? (r.B44 <= 0 ? "meta já alcançada" : dec(Math.ceil(r.B44)) + " venda" + (Math.ceil(r.B44) > 1 ? "s" : "")) : "—";
 
-  /* ocupação */
-  var total = num($("b48").value);
-  ["49","50","51","52"].forEach(function(k){
-    var v = num($("b"+k).value);
-    $("p"+k).textContent = (total > 0) ? pct(v/total, 0) : "—";
-  });
-
-  /* conversão */
-  var ab = num($("b61").value), cv = num($("b62").value);
-  $("b63").textContent = ab > 0 ? pct(cv/ab, 1) : "—";
-
   salvarCampos();
   return r;
 }
 
-/* -------------------------------------------------------------------
-   O que falta para subir um tier.
-
-   Para CAIR no tier seguinte o crescimento precisa SUPERAR o "Cresc. Máx"
+/* Para cair no tier seguinte o crescimento precisa SUPERAR o "Cresc. Máx"
    do tier atual — a faixa da planilha é fechada no limite superior. Por isso
-   a meta é o maior valor entre o RMV do próximo tier e o limite + R$ 0,01.
-   ------------------------------------------------------------------- */
+   a meta é o maior valor entre o RMV do próximo tier e o limite + R$ 0,01. */
 function renderProximo(r){
   var c = r.c, corpo = $("nextBody"), hint = $("nextHint"), titulo = $("nextTitle");
 
@@ -682,11 +596,9 @@ function renderProximo(r){
 
   var atual = r.tiers[r.idx], prox = r.tiers[r.idx + 1];
 
-  /* faturamento mínimo do mês vigente para o crescimento superar o limite do tier atual */
   var limite = r.D7 * (1 + c.bandaMax[r.idx]) * 3 - r.B6 - r.B7 + 0.01;
   var meta = Math.max(prox.rmv, limite);
   var falta = meta - r.B12;
-  var crescNec = r.D7 > 0 ? ((meta + r.B6 + r.B7) / 3) / r.D7 - 1 : NaN;
   var ganho = (prox.rmv * prox.comissao) - (atual.rmv * atual.comissao);
 
   corpo.hidden = false;
@@ -708,7 +620,7 @@ function renderProximo(r){
 
   var nota = "";
   if (falta <= 0){
-    nota = "O faturamento do mês vigente já cobre o Tier " + prox.n + ". Confira se o valor digitado no mês 3 está fechado.";
+    nota = "O faturamento do mês vigente já cobre o Tier " + prox.n + ". Confira se o valor digitado no mês vigente está fechado.";
   } else if (isFinite(r.B31) && r.B31 > 0){
     var qtd = Math.ceil(falta / r.B31);
     nota = "São " + dec(qtd) + " cliente" + (qtd > 1 ? "s" : "") + " novo" + (qtd > 1 ? "s" : "") + " no ticket de "
@@ -732,13 +644,8 @@ function hexAlpha(hex, a){
   return "rgba(" + ((n>>16)&255) + "," + ((n>>8)&255) + "," + (n&255) + "," + a + ")";
 }
 
-/* ===================================================================
-   6. CAMPOS + PERSISTÊNCIA
-   =================================================================== */
-var CAMPOS = ["mesRef","m0","m1","m2","m3","b32","b33","b48","b49","b50","b51","b52",
-              "b59","b60","b61","b62","b36","acoes","mkt"];
+var CAMPOS = ["mesRef","m0","m1","m2","m3","b32","b33","b36"];
 
-/* ---- meses ---- */
 var MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
              "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 function somaMes(ym, n){
@@ -786,14 +693,13 @@ function carregarCampos(){
     var el = $(id); if (!el) return;
     var v = porCarteira[id];
     if (v === undefined || v === ""){
-      if (el.tagName !== "SELECT") el.value = "";   /* selects mantêm o padrão */
+      if (el.tagName !== "SELECT") el.value = "";
       return;
     }
     el.value = v;
   });
 }
 
-/* seletor de carteiras */
 var barra = $("carteiras");
 ORDEM.forEach(function(k){
   var b = document.createElement("button");
@@ -820,9 +726,6 @@ function montarMetas(){
   $("b36").value = (atual !== "" && atual !== null) ? atual : "9";
 }
 
-/* ===================================================================
-   7. HISTÓRICO
-   =================================================================== */
 function renderHistorico(){
   var h = estado.historico || [];
   var alvo = $("histWrap");
@@ -871,6 +774,38 @@ function nota(txt){
   nota._t = setTimeout(function(){ $("savedNote").textContent = ""; }, 4000);
 }
 
+function quandoFoi(iso){
+  if (!iso) return null;
+  var d = new Date(iso);
+  if (isNaN(d)) return null;
+  var min = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (min < 1) return "agora mesmo";
+  if (min < 60) return "há " + min + " min";
+  if (min < 1440) return "há " + Math.floor(min/60) + "h";
+  return "há " + Math.floor(min/1440) + " dia" + (Math.floor(min/1440) > 1 ? "s" : "");
+}
+
+function atualizarStatus(){
+  var st = $("stStatus"); if (!st) return;
+  if (!temStorage){
+    st.textContent = "Este navegador está bloqueando o salvamento — os dados somem ao fechar a página.";
+    st.style.color = "var(--bad)";
+    return;
+  }
+  var q = quandoFoi(estado.ultimaGravacao);
+  st.textContent = "Salvo neste navegador" + (q ? " · " + q : "") + ". Ao reabrir o link, tudo volta automaticamente.";
+  st.style.color = "var(--ink-3)";
+}
+
+function baixarBackup(){
+  var blob = new Blob([JSON.stringify(estado,null,2)],{type:"application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "business-plan-kater-" + new Date().toISOString().slice(0,10) + ".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+
 $("btnSave").addEventListener("click", function(){
   var r = render();
   if (!(r.D7 > 0) || !(r.C12 > 0)){ nota("Preencha os quatro meses de faturamento antes de salvar."); return; }
@@ -901,12 +836,7 @@ $("btnSave").addEventListener("click", function(){
 });
 
 $("btnBackup").addEventListener("click", function(){
-  var blob = new Blob([JSON.stringify(estado,null,2)],{type:"application/json"});
-  var a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "business-plan-kater-" + new Date().toISOString().slice(0,10) + ".json";
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  baixarBackup();
   nota("Backup baixado.");
 });
 
@@ -918,7 +848,11 @@ $("fileIn").addEventListener("change", function(ev){
     try {
       var d = JSON.parse(fr.result);
       if (!d || typeof d !== "object") throw new Error();
-      estado = { campos: d.campos || {}, historico: d.historico || [], carteira: d.ultimaCarteira || d.carteira || "prata" };
+      estado = {
+        campos: d.campos || {},
+        historico: d.historico || [],
+        carteira: d.ultimaCarteira || d.carteira || "prata"
+      };
       gravarTudo(estado);
       trocarCarteira(estado.carteira);
       renderHistorico();
@@ -935,9 +869,6 @@ $("btnClear").addEventListener("click", function(){
   estado.historico = []; gravarTudo(estado); renderHistorico(); nota("Histórico limpo.");
 });
 
-/* ===================================================================
-   8. INICIALIZAÇÃO
-   =================================================================== */
 $("formulaTable").innerHTML = FORMULAS.map(function(f){
   return "<tr><td>"+f[0]+"</td><td>"+f[1].replace(/</g,"&lt;")+"</td><td>"+f[2]+"</td></tr>";
 }).join("");
@@ -958,5 +889,7 @@ document.addEventListener("blur", function(e){
 estado.carteira = estado.ultimaCarteira || "prata";
 trocarCarteira(estado.carteira);
 renderHistorico();
+atualizarStatus();
+setInterval(atualizarStatus, 60000);
 })();
 </script>
