@@ -87,7 +87,18 @@ h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.02em}
 .item.dentro .mais{background:var(--roxo);border-color:var(--roxo);color:#fff}
 
 /* ---------- carrinho ---------- */
-.painel{position:sticky;top:96px}
+.painel{
+  position:sticky;top:88px;
+  max-height:calc(100vh - 108px);
+  overflow-y:auto;overscroll-behavior:contain;
+  padding-right:6px;
+  scrollbar-width:thin;scrollbar-color:#CFCDDE transparent;
+}
+.painel::-webkit-scrollbar{width:9px}
+.painel::-webkit-scrollbar-track{background:transparent}
+.painel::-webkit-scrollbar-thumb{background:#CFCDDE;border-radius:9px;border:2px solid #fff}
+.painel::-webkit-scrollbar-thumb:hover{background:var(--roxo-claro)}
+@media(max-width:1040px){.painel{position:static;max-height:none;overflow:visible;padding-right:0}}
 .vazio{padding:34px 20px;text-align:center;color:var(--tinta-suave);font-size:14px;margin:0}
 .linha{padding:14px 20px;border-bottom:1px solid var(--linha)}
 .linha .cab{display:flex;gap:10px;align-items:flex-start}
