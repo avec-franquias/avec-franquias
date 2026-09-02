@@ -358,7 +358,7 @@ async function gerarToken(){
   
   const b=$('btnToken'); b.disabled=true; msg.className='msg'; msg.textContent='Gerando token…';
   try{
-    const r=await fetch(u,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+    const r=await fetch(u+'?payload='+encodeURIComponent(body)+'&_='+Date.now(),{method:'GET',redirect:'follow'});
     const txt=await r.text(); let d; try{d=JSON.parse(txt);}catch{d=txt;}
     if(typeof d==='string' && /<html/i.test(d)){ const doc=new DOMParser().parseFromString(d,'text/html'); const t=(doc.querySelector('.errorMessage')||doc.querySelector('title')||{}).textContent||''; const body=(doc.body&&doc.body.innerText||'').replace(/\s+/g,' ').trim().slice(0,220);
       msg.className='msg err'; msg.textContent='O Google respondeu com uma página em vez do token: '+(t.trim()||body)+' — normalmente é falta de autorização do script (rode getToken no editor e autorize) ou a implantação sem "Nova versão".'; out.textContent=body; b.disabled=false; return; }
@@ -412,8 +412,7 @@ $('btnPdf').addEventListener('click',()=>{
   w.document.open(); w.document.write(html); w.document.close();
 });
 $('btnTab').addEventListener('click',()=>{const u=$('url').value.trim(); let body; try{ body=JSON.stringify(JSON.parse($('payload').textContent)); }catch(e){alert('JSON inválido');return;}
-  const f=document.createElement('form'); f.method='POST'; f.action=u; f.target='_blank'; f.style.display='none';
-  const i=document.createElement('input'); i.type='hidden'; i.name='payload'; i.value=body; f.appendChild(i); document.body.appendChild(f); f.submit(); f.remove();});
+  window.open(u+'?html=1&payload='+encodeURIComponent(body),'_blank');});
 // cenário de exemplo (igual à planilha): 1 POS S920 - Avec, venda, R$ 499
 if(posRows[0]){posRows[0].qtd=1; initPos();}
 recalc();
