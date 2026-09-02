@@ -43,8 +43,8 @@ h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.02em}
 .topo .dir{margin-left:auto;display:flex;gap:10px}
 
 /* ---------- layout ---------- */
-.tela{max-width:1280px;margin:0 auto;padding:26px 24px 90px;display:grid;grid-template-columns:1fr 410px;gap:26px;align-items:start}
-@media(max-width:1040px){.tela{grid-template-columns:1fr}}
+.tela{max-width:1280px;margin:0 auto;padding:26px 24px 90px;display:grid;grid-template-columns:minmax(0,1fr) 470px;gap:24px;align-items:start}
+@media(max-width:1120px){.tela{grid-template-columns:1fr}}
 
 .bloco{background:var(--cinza);border:1px solid var(--linha);border-radius:var(--r);overflow:hidden}
 .bloco > header{padding:16px 20px;border-bottom:1px solid var(--linha);display:flex;align-items:center;gap:12px}
@@ -98,7 +98,7 @@ h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.02em}
 .painel::-webkit-scrollbar-track{background:transparent}
 .painel::-webkit-scrollbar-thumb{background:#CFCDDE;border-radius:9px;border:2px solid #fff}
 .painel::-webkit-scrollbar-thumb:hover{background:var(--roxo-claro)}
-@media(max-width:1040px){.painel{position:static;max-height:none;overflow:visible;padding-right:0}}
+@media(max-width:1120px){.painel{position:static;max-height:none;overflow:visible;padding-right:0}}
 .vazio{padding:34px 20px;text-align:center;color:var(--tinta-suave);font-size:14px;margin:0}
 .linha{padding:14px 20px;border-bottom:1px solid var(--linha)}
 .linha .cab{display:flex;gap:10px;align-items:flex-start}
