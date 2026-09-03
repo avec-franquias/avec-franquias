@@ -305,6 +305,7 @@ footer{color:var(--ink-3);font-size:11.5px;text-align:center;padding:26px 20px 0
         </div>
         <button class="acao clara" id="btn-backup">Backup</button>
         <button class="acao clara" id="btn-restaurar">Restaurar</button>
+        <button class="acao remover" id="btn-zerar">Começar do zero</button>
         <input type="file" id="arq-backup" accept=".json" class="oculto">
       </div>
     </div>
@@ -321,7 +322,7 @@ footer{color:var(--ink-3);font-size:11.5px;text-align:center;padding:26px 20px 0
     </div>
 
     <div class="premissas">
-      <div class="pcampo"><label for="i-franquia">Franquia</label><input type="text" id="i-franquia" style="min-width:150px"></div>
+      <div class="pcampo"><label for="i-franquia">Franquia</label><input type="text" id="i-franquia" placeholder="Nome da franquia" style="min-width:150px"></div>
       <div class="pcampo"><label for="i-nivel">Nível</label>
         <select id="i-nivel"><option>Bronze</option><option>Prata</option><option>Ouro</option><option>Diamante</option></select></div>
       <div class="pcampo"><label for="i-carteira">Carteira início (R$)</label><input type="number" id="i-carteira" step="0.01"></div>
@@ -366,6 +367,15 @@ footer{color:var(--ink-3);font-size:11.5px;text-align:center;padding:26px 20px 0
 
 <!-- ================= PLANO DO MÊS ================= -->
 <section class="painel" id="p-plano" role="tabpanel" aria-labelledby="tab-plano">
+  <div class="faixa amarela oculto" id="faixa-vazio">
+    <div class="ico">✏️</div>
+    <div style="flex:1">
+      <h3>Este mês está em branco</h3>
+      <p>Preencha a franquia e a carteira no topo, as metas do nível no fim desta aba e as premissas de conversão e ticket nos campos da árvore.
+        Se preferir partir de um exemplo e ajustar depois, carregue os valores de referência.</p>
+      <div style="margin-top:9px"><button class="acao" id="btn-referencia">Carregar valores de referência</button></div>
+    </div>
+  </div>
   <div class="faixa oculto" id="faixa-novo">
     <div class="ico">🆕</div>
     <div><h3 id="faixa-novo-tit">Mês novo</h3>
@@ -582,15 +592,27 @@ function aplicarAcento(nivel){
   raiz.setProperty('--accent-soft', hexAlpha(c, .10));
 }
 
-const NIVEIS = {
+/* Referência: valores de exemplo, carregados só se o franqueado pedir. */
+const NIVEIS_REF = {
   Bronze:{nova:1000, exp:550, cancel:0.03}, Prata:{nova:2500, exp:1250, cancel:0.03},
   Ouro:{nova:3500, exp:1800, cancel:0.03},  Diamante:{nova:5000, exp:2500, cancel:0.03},
 };
-const PREMISSAS_PADRAO = {
+const PREMISSAS_REF = {
   mixProsp:0.75, mixTerceira:0, convPropFech:0.45, convVisitaProp:0.50,
   convPropFechIn:0.45, convLeadProp:0.60, ticketNovos:207, pctEspontaneo:0.30,
   ticketUpsell:100, convVisitaUpsell:0.25, downsell:-100,
   visitasPreChurn:6, radarPreChurn:8, reversao:0.50, ticketCancel:207,
+};
+/* Fábrica: tudo zerado. Quem abre pela primeira vez começa com a folha em branco. */
+const NIVEIS = {
+  Bronze:{nova:0, exp:0, cancel:0}, Prata:{nova:0, exp:0, cancel:0},
+  Ouro:{nova:0, exp:0, cancel:0},   Diamante:{nova:0, exp:0, cancel:0},
+};
+const PREMISSAS_PADRAO = {
+  mixProsp:0, mixTerceira:0, convPropFech:0, convVisitaProp:0,
+  convPropFechIn:0, convLeadProp:0, ticketNovos:0, pctEspontaneo:0,
+  ticketUpsell:0, convVisitaUpsell:0, downsell:0,
+  visitasPreChurn:0, radarPreChurn:0, reversao:0, ticketCancel:0,
 };
 
 /* ---------- calendário ---------- */
@@ -626,12 +648,12 @@ let A = null;
 
 function mesNovo(chave, anterior){
   const dias = semanasDoMes(chave);
-  const metas = anterior ? anterior.niveis : (A && A.niveis) || NIVEIS;
+  const metas = anterior ? anterior.niveis : NIVEIS;
   return {
     chave,
     nivel: anterior ? anterior.nivel : 'Bronze',
     niveis: JSON.parse(JSON.stringify(metas)),
-    carteira: anterior ? fechamentoDoMes(anterior) : 17471.83,
+    carteira: anterior ? fechamentoDoMes(anterior) : 0,
     diasUteis: dias.reduce((a,b)=>a+b,0),
     vendedores: anterior ? anterior.vendedores : 1,
     p: Object.assign({}, anterior ? anterior.p : PREMISSAS_PADRAO),
@@ -645,7 +667,7 @@ function mesNovo(chave, anterior){
 }
 function estadoInicial(){
   const c = chaveMes(hoje);
-  const a = { versao:2, franquia:'Avec Cascavel', niveis:JSON.parse(JSON.stringify(NIVEIS)), mesAtual:c, meses:{} };
+  const a = { versao:2, franquia:'', niveis:JSON.parse(JSON.stringify(NIVEIS)), mesAtual:c, meses:{} };
   a.meses[c] = mesNovo(c, null);
   return a;
 }
@@ -923,6 +945,9 @@ function renderMesbar(){
     x.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); remover(e); } });
   });
   const m = M();
+  const semMetas = !Object.values(m.niveis).some(n => n.nova || n.exp || n.cancel);
+  const semPremissas = !Object.values(m.p).some(v => v);
+  $('#faixa-vazio').classList.toggle('oculto', !(semMetas && semPremissas));
   const f = $('#faixa-novo');
   if(m.novo && m.origem){
     f.classList.remove('oculto');
@@ -1100,6 +1125,13 @@ function renderAcoes(m){
     });
   });
 }
+$('#btn-referencia').addEventListener('click', ()=>{
+  const m = M();
+  m.p = Object.assign({}, PREMISSAS_REF);
+  m.niveis = JSON.parse(JSON.stringify(NIVEIS_REF));
+  m.novo = false;
+  render(); toast('Valores de referência carregados — ajuste o que for diferente na sua franquia');
+});
 $('#btn-add-acao').addEventListener('click', ()=>{ M().acoes.push({}); renderAcoes(M()); salvar(); });
 
 /* ============================================================
@@ -1603,6 +1635,13 @@ $('#btn-backup').addEventListener('click', ()=>{
   baixar('arvore-alavancas-' + (A.franquia||'franquia').replace(/\W+/g,'-').toLowerCase() + '-' + new Date().toISOString().slice(0,10) + '.json',
     JSON.stringify(A, null, 2), 'application/json');
   toast('Backup baixado');
+});
+$('#btn-zerar').addEventListener('click', ()=>{
+  if(!confirm('Apagar tudo e começar do zero?\n\nTodos os meses, realizados, premissas e metas salvos neste navegador serão perdidos. Se quiser guardar, cancele e faça um Backup antes.')) return;
+  try{ localStorage.removeItem(CHAVE); }catch(e){}
+  A = estadoInicial();
+  salvarAgora(); render(); $('#tab-plano').click();
+  toast('Tudo zerado — comece preenchendo a franquia e as metas');
 });
 $('#btn-restaurar').addEventListener('click', ()=>$('#arq-backup').click());
 $('#arq-backup').addEventListener('change', e=>{
