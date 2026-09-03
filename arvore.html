@@ -230,6 +230,11 @@ tr.total td{border-top:1px solid var(--line);font-weight:700}
 .menu button{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:var(--r-p);padding:8px 11px;cursor:pointer;font-family:var(--fonte-titulo);font-weight:700;font-size:12.5px;color:var(--ink)}
 .menu button:hover{background:var(--line-2)}
 .menu button small{display:block;font-family:var(--fonte-texto);font-weight:400;font-size:11px;color:var(--ink-3);margin-top:1px}
+.dlg-fundo{position:fixed;inset:0;background:rgba(20,22,28,.38);display:flex;align-items:center;justify-content:center;padding:20px;z-index:120}
+.dlg{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 18px 48px -16px rgba(20,22,28,.42);padding:20px 22px;max-width:460px;width:100%}
+.dlg h3{margin:0 0 7px;font-size:16px;color:var(--ink)}
+.dlg p{margin:0 0 17px;font-size:13px;color:var(--ink-2);white-space:pre-line;line-height:1.5}
+.dlg-acoes{display:flex;justify-content:flex-end;gap:8px}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:11px 18px;border-radius:var(--r-p);font-size:13px;font-family:var(--fonte-titulo);font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:99}
 #toast.ver{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -559,6 +564,17 @@ footer{color:var(--ink-3);font-size:11.5px;text-align:center;padding:26px 20px 0
 <footer>avec · Árvore de Alavancas — os dados ficam salvos apenas neste navegador. Use o botão Backup para guardar uma cópia.</footer>
 </div>
 
+<div id="dialogo" class="dlg-fundo oculto" role="dialog" aria-modal="true" aria-labelledby="dlg-tit">
+  <div class="dlg">
+    <h3 id="dlg-tit"></h3>
+    <p id="dlg-txt"></p>
+    <div class="dlg-acoes">
+      <button class="acao clara" id="dlg-nao">Cancelar</button>
+      <button class="acao remover" id="dlg-sim">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
@@ -846,11 +862,54 @@ function fmtValor(l,v){
   if(l.tipo === 'pct') return pct(v);
   return dec(v, l.dec == null ? 1 : l.dec);
 }
+/* Confirmação desenhada na página: confirm()/alert() nativos são bloqueados
+   dentro de iframes com sandbox, e a resposta voltaria como "cancelar". */
+let dlgResolver = null;
+function fecharDlg(valor){
+  $('#dialogo').classList.add('oculto');
+  const r = dlgResolver; dlgResolver = null;
+  if(r) r(valor);
+}
+function perguntar(titulo, texto, rotuloSim, perigo){
+  return new Promise(res=>{
+    $('#dlg-tit').textContent = titulo;
+    $('#dlg-txt').textContent = texto;
+    const sim = $('#dlg-sim');
+    sim.textContent = rotuloSim || 'Confirmar';
+    sim.className = 'acao ' + (perigo === false ? '' : 'remover');
+    $('#dlg-nao').classList.remove('oculto');
+    $('#dialogo').classList.remove('oculto');
+    dlgResolver = res;
+    setTimeout(()=>sim.focus(), 20);
+  });
+}
+function avisar(titulo, texto){
+  return new Promise(res=>{
+    $('#dlg-tit').textContent = titulo;
+    $('#dlg-txt').textContent = texto;
+    const sim = $('#dlg-sim');
+    sim.textContent = 'Entendi'; sim.className = 'acao';
+    $('#dlg-nao').classList.add('oculto');
+    $('#dialogo').classList.remove('oculto');
+    dlgResolver = res;
+    setTimeout(()=>sim.focus(), 20);
+  });
+}
+document.addEventListener('DOMContentLoaded', ()=>{});
 let toastTimer;
 function toast(msg){
   const t = $('#toast'); t.textContent = msg; t.classList.add('ver');
   clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('ver'), 2200);
 }
+
+$('#dlg-sim').addEventListener('click', ()=>fecharDlg(true));
+$('#dlg-nao').addEventListener('click', ()=>fecharDlg(false));
+$('#dialogo').addEventListener('click', e=>{ if(e.target.id === 'dialogo') fecharDlg(false); });
+document.addEventListener('keydown', e=>{
+  if($('#dialogo').classList.contains('oculto')) return;
+  if(e.key === 'Escape') fecharDlg(false);
+  if(e.key === 'Enter') fecharDlg(true);
+});
 
 /* ============================================================
    4. ABAS
@@ -912,9 +971,11 @@ $('#btn-escolher-mes').addEventListener('click', ()=>{
   if(el.showPicker) { try{ el.showPicker(); }catch(e){} } else el.focus();
 });
 $('#i-mes').addEventListener('change', ()=>{ if($('#i-mes').value) irParaMes($('#i-mes').value); });
-$('#btn-apagar-mes').addEventListener('click', ()=>{
+$('#btn-apagar-mes').addEventListener('click', async ()=>{
   if(Object.keys(A.meses).length <= 1){ toast('Este é o único mês salvo'); return; }
-  if(!confirm('Apagar todos os dados de ' + nomeMes(A.mesAtual) + '? Os outros meses continuam salvos.')) return;
+  const ok = await perguntar('Apagar ' + nomeMes(A.mesAtual) + '?',
+    'Todos os dados deste mês serão apagados. Os outros meses continuam salvos.', 'Apagar mês');
+  if(!ok) return;
   delete A.meses[A.mesAtual];
   A.mesAtual = Object.keys(A.meses).sort().pop();
   render(); toast('Mês apagado');
@@ -933,10 +994,14 @@ function renderMesbar(){
     b.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); irParaMes(b.dataset.c); } });
   });
   $$('#chips-meses .x').forEach(x=>{
-    const remover = e=>{
+    const remover = async e=>{
       e.stopPropagation();
       const c = x.dataset.x, alvo = A.meses[c];
-      if(!mesVazio(alvo) && !confirm('Remover ' + nomeMes(c) + '? Os dados preenchidos neste mês serão apagados.')) return;
+      if(!mesVazio(alvo)){
+        const ok = await perguntar('Remover ' + nomeMes(c) + '?',
+          'Este mês tem dados preenchidos e eles serão apagados.', 'Remover mês');
+        if(!ok) return;
+      }
       delete A.meses[c];
       if(A.mesAtual === c) A.mesAtual = Object.keys(A.meses).sort().pop();
       render(); toast(nomeMes(c) + ' removido');
@@ -994,8 +1059,10 @@ CAMPOS.forEach(([sel, cam, tipo])=>{
     render({manterFoco:sel});
   });
 });
-$('#btn-limpar-real').addEventListener('click', ()=>{
-  if(!confirm('Limpar todos os realizados de ' + nomeMes(A.mesAtual) + '?')) return;
+$('#btn-limpar-real').addEventListener('click', async ()=>{
+  const ok = await perguntar('Limpar os realizados de ' + nomeMes(A.mesAtual) + '?',
+    'As colunas “Real” voltam a ficar vazias. O plano e as premissas continuam como estão.', 'Limpar realizados');
+  if(!ok) return;
   M().real = {}; render(); toast('Realizados limpos');
 });
 
@@ -1636,8 +1703,10 @@ $('#btn-backup').addEventListener('click', ()=>{
     JSON.stringify(A, null, 2), 'application/json');
   toast('Backup baixado');
 });
-$('#btn-zerar').addEventListener('click', ()=>{
-  if(!confirm('Apagar tudo e começar do zero?\n\nTodos os meses, realizados, premissas e metas salvos neste navegador serão perdidos. Se quiser guardar, cancele e faça um Backup antes.')) return;
+$('#btn-zerar').addEventListener('click', async ()=>{
+  const ok = await perguntar('Apagar tudo e começar do zero?',
+    'Todos os meses, realizados, premissas e metas salvos neste navegador serão perdidos.\n\nSe quiser guardar uma cópia, cancele e clique em Backup antes.', 'Apagar tudo');
+  if(!ok) return;
   try{ localStorage.removeItem(CHAVE); }catch(e){}
   A = estadoInicial();
   salvarAgora(); render(); $('#tab-plano').click();
@@ -1647,15 +1716,19 @@ $('#btn-restaurar').addEventListener('click', ()=>$('#arq-backup').click());
 $('#arq-backup').addEventListener('change', e=>{
   const f = e.target.files[0]; if(!f) return;
   const fr = new FileReader();
-  fr.onload = ev => {
+  fr.onload = async ev => {
+    let novo;
     try{
-      const novo = JSON.parse(ev.target.result);
-      if(!novo || !novo.meses) throw new Error('formato inesperado');
-      if(!confirm('Restaurar o backup? Os dados atuais deste navegador serão substituídos.')) return;
-      A = novo; A.niveis = A.niveis || JSON.parse(JSON.stringify(NIVEIS));
-      if(!A.meses[A.mesAtual]) A.mesAtual = Object.keys(A.meses).sort().pop();
-      render(); toast('Backup restaurado');
-    }catch(err){ alert('Não consegui ler este backup: ' + err.message); }
+      novo = JSON.parse(ev.target.result);
+      if(!novo || !novo.meses) throw new Error('o arquivo não tem meses salvos');
+    }catch(err){ avisar('Não consegui ler este backup', err.message); return; }
+    const ok = await perguntar('Restaurar este backup?',
+      'Os dados atuais deste navegador serão substituídos pelos ' + Object.keys(novo.meses).length + ' mês(es) do arquivo.', 'Restaurar');
+    if(!ok) return;
+    A = novo; A.niveis = A.niveis || JSON.parse(JSON.stringify(NIVEIS));
+    Object.values(A.meses).forEach(m=>{ if(!m.niveis) m.niveis = JSON.parse(JSON.stringify(A.niveis)); });
+    if(!A.meses[A.mesAtual]) A.mesAtual = Object.keys(A.meses).sort().pop();
+    render(); toast('Backup restaurado');
   };
   fr.readAsText(f);
 });
