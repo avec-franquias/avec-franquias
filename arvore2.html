@@ -582,7 +582,10 @@ footer{color:var(--ink-3);font-size:11.5px;text-align:center;padding:26px 20px 0
 /* ============================================================
    1. ARMAZENAMENTO — sobrevive a fechar o navegador
    ============================================================ */
-const CHAVE = 'avec_arvore_v2';
+/* A chave muda quando os padrões mudam. Assim uma versão nova não herda
+   o que ficou salvo de uma anterior — este arquivo sempre abre em branco. */
+const CHAVE = 'avec_arvore_v3';
+const CHAVES_ANTIGAS = ['avec_arvore_v2', 'avec_arvore_v1'];
 const disco = (()=>{
   let ok = true;
   try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); }catch(e){ ok = false; }
@@ -683,7 +686,7 @@ function mesNovo(chave, anterior){
 }
 function estadoInicial(){
   const c = chaveMes(hoje);
-  const a = { versao:2, franquia:'', niveis:JSON.parse(JSON.stringify(NIVEIS)), mesAtual:c, meses:{} };
+  const a = { versao:3, franquia:'', niveis:JSON.parse(JSON.stringify(NIVEIS)), mesAtual:c, meses:{} };
   a.meses[c] = mesNovo(c, null);
   return a;
 }
@@ -1725,7 +1728,7 @@ $('#arq-backup').addEventListener('change', e=>{
     const ok = await perguntar('Restaurar este backup?',
       'Os dados atuais deste navegador serão substituídos pelos ' + Object.keys(novo.meses).length + ' mês(es) do arquivo.', 'Restaurar');
     if(!ok) return;
-    A = novo; A.niveis = A.niveis || JSON.parse(JSON.stringify(NIVEIS));
+    A = novo; A.versao = 3; A.niveis = A.niveis || JSON.parse(JSON.stringify(NIVEIS));
     Object.values(A.meses).forEach(m=>{ if(!m.niveis) m.niveis = JSON.parse(JSON.stringify(A.niveis)); });
     if(!A.meses[A.mesAtual]) A.mesAtual = Object.keys(A.meses).sort().pop();
     render(); toast('Backup restaurado');
@@ -1736,6 +1739,7 @@ $('#arq-backup').addEventListener('change', e=>{
 /* ============================================================
    14. INÍCIO
    ============================================================ */
+try{ CHAVES_ANTIGAS.forEach(k => localStorage.removeItem(k)); }catch(e){}
 A = carregar();
 if(!A.meses[A.mesAtual]) A.mesAtual = Object.keys(A.meses).sort().pop();
 render();
