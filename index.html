@@ -336,7 +336,7 @@
           <p class="hint" id="diagAcao" style="margin:0 0 10px"></p>
           <div class="scroller">
             <table>
-              <thead><tr><th>Caminho</th><th>Seu normal</th><th>Precisa virar</th><th>Cobre da falta</th></tr></thead>
+              <thead><tr><th>Caminho</th><th>Seu normal</th><th>O que fazer neste mês</th><th>Esforço</th></tr></thead>
               <tbody id="tabAcao"></tbody>
             </table>
           </div>
@@ -1191,77 +1191,105 @@ function renderPorque(r){
   }
   $("diagRegua").textContent = txt;
 
-  /* 4 — onde atacar, com números */
+  /* 4 — onde atacar, ranqueado pelo esforço real de cada alavanca.
+     A métrica comum é falta ÷ média histórica da alavanca: quanto do seu
+     mês normal daquele componente você precisaria produzir a mais (ou
+     deixar de perder). Quanto menor, mais realista. */
   var h = perfilHistorico();
   var d = mov[ref];
   if (netFalta <= 0){
     $("diagAcao").textContent = "O net MRR deste mês já cobre o Tier " + (meta+1)
       + ". Para mirar mais alto, escolha o tier seguinte no seletor acima.";
-    $("tabAcao").innerHTML = "";
-    $("acaoFecho").textContent = "";
+    $("tabAcao").innerHTML = ""; $("acaoFecho").textContent = "";
     return;
   }
-  if (!h){ $("tabAcao").innerHTML = ""; $("acaoFecho").textContent = ""; return; }
+  if (!h || !d){ $("tabAcao").innerHTML = ""; $("acaoFecho").textContent = ""; return; }
 
   var falta = netFalta;
-  var atualNovo = d ? d.novo : 0, atualUp = d ? d.up : 0, atualDown = d ? d.down : 0, atualChurn = d ? d.churn : 0;
+  var mesesNeg = h.meses.filter(function(m){ return mov[m].down > 0; }).length;
+  var picoUpMes = h.meses.reduce(function(a,b){ return mov[b].up > mov[a].up ? b : a; }, h.meses[0]);
+  var picoReat  = Math.max.apply(null, h.meses.map(function(m){ return mov[m].reat; }));
 
-  function pctCobre(v){ return Math.min(100, Math.max(0, v/falta*100)).toFixed(0) + "%"; }
-  function linhaAcao(nome, normal, precisa, cobre, obs){
-    return "<tr><td>" + nome + "<br><span style='color:var(--ink-3); font-size:11.5px'>" + obs + "</span></td>"
-      + "<td>" + brl(normal) + "</td>"
-      + "<td><b>" + precisa + "</b></td>"
-      + "<td class='growth-pos'>" + cobre + "</td></tr>";
+  var alavancas = [
+    { nome:"Expansão na base",
+      ganho:true, normal:h.up, atual:d.up,
+      fazer:"Levar o upgrade de " + brl(d.up) + " para " + brl(d.up + falta) + " no mês",
+      como:"Puxe quem está no plano mais baixo com uso acima da média. Em " + rotulo(picoUpMes)
+            + " você fez " + brl(h.melhorUp) + " de expansão — foi o que carregou aquele mês." },
+    { nome:"Reverter downgrade",
+      ganho:false, normal:h.down, atual:d.down,
+      fazer:"Segurar " + brl(Math.min(falta, d.down)) + " dos " + brl(d.down) + " que reduziram",
+      como:"Downgrade foi negativo em " + mesesNeg + " de " + h.n + " meses. Não é evento, é vazamento estrutural. "
+            + "Ligue para quem reduziu plano nos últimos 60 dias e ofereça o retorno ao anterior." },
+    { nome:"Blindar churn",
+      ganho:false, normal:h.churn, atual:d.churn,
+      fazer:"Evitar " + brl(Math.min(falta, d.churn)) + " dos " + brl(d.churn) + " que cancelaram",
+      como:(d.churn > h.churn * 1.3
+              ? "O churn deste mês está " + ((d.churn/h.churn-1)*100).toFixed(0) + "% acima da sua média — algo saiu do normal aqui. "
+              : "O churn está dentro da sua média. ")
+            + "Priorize contratos em aviso de cancelamento e clientes sem uso nos últimos 30 dias." },
+    { nome:"Reativação",
+      ganho:true, normal:h.reat, atual:d.reat,
+      fazer:"Levar a reativação de " + brl(d.reat) + " para " + brl(d.reat + falta),
+      como:"É a sua alavanca menos explorada: nunca passou de " + brl(picoReat)
+            + " em " + h.n + " meses. Puxe a base de cancelados dos últimos 6 meses." },
+    { nome:"Venda nova",
+      ganho:true, normal:h.novo, atual:d.novo,
+      fazer:(isFinite(tk) && tk > 0
+              ? dec(Math.ceil(falta/tk)) + " venda" + (Math.ceil(falta/tk)>1?"s":"") + " no ticket de " + brl(tk)
+              : brl(falta) + " em contratos novos"),
+      como:"Prospecção é a sua alavanca mais estável — varia só "
+            + (h.novo > 0 ? (Math.max.apply(null,h.meses.map(function(m){return mov[m].novo;})) /
+                Math.max(1,Math.min.apply(null,h.meses.map(function(m){return mov[m].novo;})))).toFixed(1) : "?")
+            + "x entre o pior e o melhor mês. Justamente por isso é a que menos vira um mês sozinha." }
+  ];
+
+  alavancas.forEach(function(a){
+    a.esforco = a.normal > 0 ? falta / a.normal : Infinity;
+    a.sozinha = a.ganho ? true : (a.atual >= falta);   /* perdas só cobrem até o que existe */
+    if (!a.sozinha) a.esforco = Infinity;
+  });
+  alavancas.sort(function(x,y){ return x.esforco - y.esforco; });
+
+  function selo(e){
+    if (!isFinite(e)) return "<span class='tag'>não cobre sozinha</span>";
+    var p = (e*100).toFixed(0) + "% do normal";
+    var cor = e <= 0.3 ? "var(--ok)" : (e <= 0.7 ? "var(--warn)" : "var(--bad)");
+    var rot = e <= 0.3 ? "baixo" : (e <= 0.7 ? "médio" : (e <= 1 ? "alto" : "fora da curva"));
+    return "<b style='color:" + cor + "'>" + rot + "</b><br><span style='color:var(--ink-3); font-size:11.5px'>" + p + "</span>";
   }
-
   var linhasAcao = "";
-  linhasAcao += linhaAcao(
-    "Venda nova",
-    h.novo,
-    (isFinite(tk) && tk > 0 ? dec(Math.ceil(falta/tk)) + " venda" + (Math.ceil(falta/tk)>1?"s":"") : brl(falta)),
-    "100%",
-    "média dos últimos " + h.n + " meses · este mês: " + brl(atualNovo));
-  linhasAcao += linhaAcao(
-    "Upgrade na base",
-    h.up,
-    brl(atualUp + falta) + " no mês",
-    pctCobre(h.up),
-    "seu melhor mês de upgrade foi " + brl(h.melhorUp) + " · este mês: " + brl(atualUp));
-  linhasAcao += linhaAcao(
-    "Segurar downgrade",
-    h.down,
-    "reduzir para " + brl(Math.max(0, atualDown - falta)),
-    pctCobre(atualDown),
-    "negativo todo mês · este mês: " + brl(atualDown));
-  linhasAcao += linhaAcao(
-    "Segurar churn",
-    h.churn,
-    "reduzir para " + brl(Math.max(0, atualChurn - falta)),
-    pctCobre(atualChurn),
-    "este mês: " + brl(atualChurn));
+  alavancas.forEach(function(a, i){
+    var destaque = (i === 0 && isFinite(a.esforco)) ? " style='background:var(--accent-soft)'" : "";
+    linhasAcao += "<tr" + destaque + ">"
+      + "<td>" + (i === 0 && isFinite(a.esforco) ? "★ " : "") + a.nome
+        + "<br><span style='color:var(--ink-3); font-size:11.5px; white-space:normal; display:block; max-width:32ch'>" + a.como + "</span></td>"
+      + "<td>" + brl(a.normal) + "<br><span style='color:var(--ink-3); font-size:11.5px'>este mês " + brl(a.atual) + "</span></td>"
+      + "<td style='text-align:left; white-space:normal; max-width:24ch'>" + a.fazer + "</td>"
+      + "<td>" + selo(a.esforco) + "</td></tr>";
+  });
   $("tabAcao").innerHTML = linhasAcao;
 
-  var perde = atualChurn + atualDown, ganha = atualNovo + atualUp + (d ? d.reat : 0);
-  var maiorSangria = atualChurn >= atualDown ? "churn" : "downgrade";
-  var valSangria   = Math.max(atualChurn, atualDown);
+  var melhor = alavancas[0];
   $("diagAcao").textContent =
     "Faltam " + brl(falta) + " de net MRR para o Tier " + (meta+1) + ". "
-    + "Neste mês a carteira perdeu " + brl(perde) + " e ganhou " + brl(ganha) + ", e a maior sangria é "
-    + maiorSangria + " com " + brl(valSangria) + ". "
-    + "Qualquer combinação das linhas abaixo que some " + brl(falta) + " fecha a meta — "
-    + "para o cálculo do tier, venda nova, upgrade e downgrade evitado valem exatamente o mesmo.";
+    + "Para o cálculo do tier, um real de venda nova, de upgrade ou de downgrade evitado valem exatamente o mesmo — "
+    + "então a pergunta não é onde você quer atacar, e sim onde é mais barato. "
+    + "Ordenei pelo esforço real: quanto do seu mês normal de cada alavanca a falta representa.";
 
-  var caminhoUp = h.melhorUp > 0 ? (falta / h.melhorUp) : Infinity;
-  var fecho = "";
-  if (isFinite(caminhoUp) && caminhoUp <= 1){
-    fecho = "Atalho mais provável: um upgrade equivalente a " + (caminhoUp*100).toFixed(0)
-      + "% do seu melhor mês de expansão (" + brl(h.melhorUp) + ") já resolve o mês sozinho. "
-      + "Expansão na base costuma fechar mais rápido que prospecção.";
-  } else if (atualDown >= falta){
-    fecho = "Atalho mais provável: o downgrade deste mês (" + brl(atualDown)
-      + ") sozinho já é maior que o que falta. Reverter parte dele resolve sem precisar vender nada novo.";
+  var fecho;
+  if (!isFinite(melhor.esforco)){
+    fecho = "Nenhuma alavanca isolada cobre a falta neste mês. Vai precisar combinar pelo menos duas.";
+  } else if (melhor.esforco <= 0.3){
+    fecho = "Caminho mais barato: " + melhor.nome.toLowerCase() + ". A falta equivale a "
+      + (melhor.esforco*100).toFixed(0) + "% do que você já faz nessa frente num mês normal — bem dentro do seu alcance.";
+  } else if (melhor.esforco <= 1){
+    fecho = "Caminho mais barato: " + melhor.nome.toLowerCase() + ", exigindo "
+      + (melhor.esforco*100).toFixed(0) + "% do seu mês normal nessa frente. Dá, mas não sai sozinho — precisa de ação dirigida.";
   } else {
-    fecho = "Nenhuma alavanca isolada cobre a falta — vai precisar combinar venda nova com expansão na base.";
+    fecho = "Atenção: nem a alavanca mais barata (" + melhor.nome.toLowerCase() + ") cobre esta meta dentro do seu histórico — "
+      + "seria preciso " + (melhor.esforco*100).toFixed(0) + "% de um mês normal. "
+      + "Ou você combina três frentes ao mesmo tempo, ou esta meta é irreal para o mês e vale mirar um tier abaixo.";
   }
   $("acaoFecho").textContent = fecho;
 }
