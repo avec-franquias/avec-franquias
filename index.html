@@ -230,8 +230,10 @@
 
         <div class="actions" style="margin-top:16px">
           <button class="btn" id="btnAvancar">Virar o mês</button>
+          <button class="btn" id="btnCSV">Importar relatório do Metabase</button>
+          <input type="file" id="csvIn" accept=".csv,text/csv" hidden>
         </div>
-        <p class="hint" style="margin:9px 0 0">Ao virar o mês, os valores sobem uma posição e o mês vigente fica em branco para você lançar o novo faturamento.</p>
+        <p class="hint" id="csvNota" style="margin:9px 0 0">Exporte o Net Churn por Status em CSV com as colunas <code>mes</code>, <code>new</code>, <code>up</code>, <code>reactivation</code>, <code>churn</code> e <code>down</code>. O valor total da carteira continua sendo digitado por você.</p>
       </section>
 
       <section class="card">
@@ -295,6 +297,53 @@
         </div>
       </section>
 
+      <section class="card" id="porqueCard">
+        <h2 id="porqueTitulo">Guia para bater a meta</h2>
+        <div class="field" style="border-top:none"><label><b>Tier que você quer atingir</b></label><select id="b36"></select></div>
+        <p class="hint" id="porqueHint" style="margin-top:12px">Preencha os quatro meses e importe o relatório do Metabase para ver o diagnóstico.</p>
+        <div id="porqueBody" hidden>
+          <div class="subhead">1 · Quanto de net MRR falta</div>
+          <div class="nextrow" style="border:none; padding-bottom:6px">
+            <div class="big">
+              <span class="k">Net MRR exigido no mês</span>
+              <span class="v accent" id="vNetPrecisa">—</span>
+            </div>
+            <div class="big">
+              <span class="k">Net MRR já realizado</span>
+              <span class="v" id="vNetFeito">—</span>
+            </div>
+            <div class="big">
+              <span class="k">Falta</span>
+              <span class="v growth-neg" id="vNetFalta">—</span>
+            </div>
+          </div>
+          <p class="hint" id="netFrase" style="margin:0 0 4px"></p>
+
+          <div class="subhead">2 · Net MRR dos meses que entram na conta</div>
+          <div class="scroller">
+            <table>
+              <thead><tr><th>Mês</th><th>New</th><th>Up</th><th>Reativação</th><th>Churn</th><th>Down</th><th>Net MRR</th><th>Papel</th></tr></thead>
+              <tbody id="tabNet"></tbody>
+            </table>
+          </div>
+
+          <div class="subhead">3 · O que te impactou</div>
+          <p class="hint" id="diagRegua" style="margin:0 0 8px"></p>
+          <div class="calcline"><span id="lblPeso1">—</span><span id="vPeso1">—</span></div>
+          <div class="calcline"><span id="lblPeso2">—</span><span id="vPeso2">—</span></div>
+
+          <div class="subhead">4 · Onde atacar</div>
+          <p class="hint" id="diagAcao" style="margin:0 0 10px"></p>
+          <div class="scroller">
+            <table>
+              <thead><tr><th>Caminho</th><th>Seu normal</th><th>Precisa virar</th><th>Cobre da falta</th></tr></thead>
+              <tbody id="tabAcao"></tbody>
+            </table>
+          </div>
+          <p class="hint" id="acaoFecho" style="margin:10px 0 0"></p>
+        </div>
+      </section>
+
       <section class="card">
         <h2>Escada de tiers</h2>
         <p class="hint" id="ladderHint">Média alvo, RMV do mês e o que cada faixa paga.</p>
@@ -309,17 +358,6 @@
           </table>
         </div>
         <p class="hint" style="margin:12px 0 0">As duas últimas colunas comparam o RMV de cada tier com o que já foi faturado no mês vigente.</p>
-      </section>
-
-      <section class="card">
-        <h2>Novas vendas para atingir o tier</h2>
-        <div class="calcline"><span>Trimestre em curso <span class="cellref">B35</span></span><span id="b35">—</span></div>
-        <div class="field"><label>Meta de tier <span class="cellref">B36</span></label><select id="b36"></select></div>
-        <div class="calcline"><span>Receita atual do mês vigente <span class="cellref">B41</span></span><span id="b41">—</span></div>
-        <div class="calcline"><span>Receita alvo <span class="cellref">B42</span></span><span id="b42">—</span></div>
-        <div class="calcline"><span>Diferença <span class="cellref">B43</span></span><span id="b43">—</span></div>
-        <div class="calcline"><span>Vendas necessárias <span class="cellref">B44</span></span><span id="b44">—</span></div>
-        <p class="hint" style="margin:10px 0 0">Diferença dividida pelo ticket médio. Na planilha original a receita alvo era fixa no Tier 13; aqui ela segue a meta escolhida acima.</p>
       </section>
 
     </div>
@@ -568,10 +606,11 @@ function render(){
   var janAtual   = curto(somaMes(ref,-2)) + " · " + curto(somaMes(ref,-1)) + " · " + curto(ref);
   $("lblPassado").textContent = "Trimestre passado — " + janPassada;
   $("lblAtual").textContent   = "Trimestre atual — " + janAtual;
-  $("b35").textContent = janAtual;
+  estado.janelaAtual = janAtual;
 
   /* próximo nível */
   renderProximo(r);
+  renderPorque(r);
 
   /* escada de tiers */
   var linhas = "";
@@ -606,11 +645,6 @@ function render(){
     (c.teto === null ? "acima de " + brl(c.piso) : brl(c.piso) + " a " + brl(c.teto)) + ".";
 
   /* novas vendas */
-  $("b41").textContent = r.B41 ? brl(r.B41) : "—";
-  $("b42").textContent = r.D7 > 0 ? brl(r.B42) : "—";
-  $("b43").textContent = r.D7 > 0 ? brl(r.B43) : "—";
-  $("b44").textContent = isFinite(r.B44) ? (r.B44 <= 0 ? "meta já alcançada" : dec(Math.ceil(r.B44)) + " venda" + (Math.ceil(r.B44) > 1 ? "s" : "")) : "—";
-
   salvarCampos();
   return r;
 }
@@ -645,8 +679,7 @@ function renderProximo(r){
   var atual = r.tiers[r.idx], prox = r.tiers[r.idx + 1];
 
   /* faturamento mínimo do mês vigente para o crescimento superar o limite do tier atual */
-  var limite = r.D7 * (1 + c.bandaMax[r.idx]) * 3 - r.B6 - r.B7 + 0.01;
-  var meta = Math.max(prox.rmv, limite);
+  var meta = alvoDoTier(r, r.idx + 1);
   var falta = meta - r.B12;
   var crescNec = r.D7 > 0 ? ((meta + r.B6 + r.B7) / 3) / r.D7 - 1 : NaN;
   var ganho = (prox.rmv * prox.comissao) - (atual.rmv * atual.comissao);
@@ -872,6 +905,367 @@ function baixarBackup(){
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
 }
 
+/* ===================================================================
+   7c. IMPORTAÇÃO DO RELATÓRIO DO METABASE
+   Espera uma linha por mês com as colunas do Net Churn por Status:
+   mes; new; up; reactivation; churn; down   (carteira é opcional)
+   Sinais são normalizados: churn e down entram sempre como perda.
+   =================================================================== */
+function chave(s){
+  return String(s||"").trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]/g,"");
+}
+/* Parser que respeita aspas — essencial aqui, porque os valores vêm como
+   "1.782,31" num arquivo separado por vírgula. */
+function lerCSV(txto){
+  var t = txto.replace(/^\ufeff/,"").replace(/\r/g,"");
+  var virg = 0, pv = 0, dentro = false;
+  for (var k=0;k<t.length;k++){
+    if (t[k] === '"') dentro = !dentro;
+    else if (!dentro && t[k] === ",") virg++;
+    else if (!dentro && t[k] === ";") pv++;
+  }
+  var sep = pv > virg ? ";" : ",";
+
+  var linhas = [], cel = "", lin = [], asp = false;
+  for (var i=0;i<t.length;i++){
+    var c = t[i];
+    if (asp){
+      if (c === '"'){ if (t[i+1] === '"'){ cel += '"'; i++; } else asp = false; }
+      else cel += c;
+    } else if (c === '"'){ asp = true; }
+    else if (c === sep){ lin.push(cel); cel = ""; }
+    else if (c === "\n"){ lin.push(cel); linhas.push(lin); lin = []; cel = ""; }
+    else cel += c;
+  }
+  if (cel !== "" || lin.length){ lin.push(cel); linhas.push(lin); }
+  linhas = linhas.filter(function(l){ return l.join("").trim() !== ""; });
+  if (linhas.length < 2) return {cab:[], linhas:[]};
+  return { cab: linhas[0].map(chave), linhas: linhas.slice(1) };
+}
+function campo(o, nomes){
+  for (var i=0;i<nomes.length;i++){ if (o[nomes[i]] !== undefined && o[nomes[i]] !== "") return o[nomes[i]]; }
+  return "";
+}
+function normalizaMes(v){
+  v = String(v||"").trim();
+  var m = v.match(/^(\d{4})[-\/](\d{1,2})/);
+  if (m) return m[1] + "-" + String(+m[2]).padStart(2,"0");
+  m = v.match(/^(\d{1,2})[-\/](\d{4})$/);
+  if (m) return m[2] + "-" + String(+m[1]).padStart(2,"0");
+  m = v.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+  if (m) return m[3] + "-" + String(+m[2]).padStart(2,"0");
+  var abrev = {jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
+  m = v.toLowerCase().match(/^([a-zç]{3})[a-zç]*[\s\-\/]+(\d{4})$/);
+  if (m && abrev[m[1]]) return m[2] + "-" + String(abrev[m[1]]).padStart(2,"0");
+  return null;
+}
+
+$("btnCSV").addEventListener("click", function(){ $("csvIn").click(); });
+$("csvIn").addEventListener("change", function(ev){
+  var f = ev.target.files[0]; if (!f) return;
+  var fr = new FileReader();
+  fr.onload = function(){
+    try { aplicarCSV(lerCSV(String(fr.result))); }
+    catch(e){ nota("Não consegui ler o arquivo. Confira as colunas esperadas."); }
+    ev.target.value = "";
+  };
+  fr.readAsText(f, "UTF-8");
+});
+
+function aplicarCSV(res){
+  var cab = res.cab, linhas = res.linhas;
+  if (!linhas.length){ nota("O arquivo veio vazio."); return; }
+
+  function idx(nomes){
+    for (var i=0;i<nomes.length;i++){ var p = cab.indexOf(nomes[i]); if (p > -1) return p; }
+    return -1;
+  }
+  var iStatus = idx(["status","tipo","movimento","categoria"]);
+  var iValor  = idx(["sum","valor","total","mrr","soma"]);
+  var iMes    = idx(["dataposicao","mes","mesreferencia","periodo","data","competencia","month"]);
+  var iCart   = idx(["carteira","faixa","segmento"]);
+
+  if (iMes < 0){ nota("Não achei a coluna de mês no arquivo."); return; }
+
+  var nomeCart = chave(CARTEIRAS[estado.carteira].nome);
+  estado.mov = estado.mov || {};
+  var destino = estado.mov[estado.carteira] = estado.mov[estado.carteira] || {};
+  var vazio = function(){ return {novo:0, up:0, reat:0, churn:0, down:0}; };
+  var recolhido = {}, achados = 0;
+
+  /* formato longo: uma linha por status por mês */
+  if (iStatus > -1 && iValor > -1){
+    var mapa = { new:"novo", newmrr:"novo", novo:"novo",
+                 up:"up", upgrade:"up",
+                 reactivation:"reat", reativacao:"reat", winback:"reat",
+                 churn:"churn", cancelamento:"churn",
+                 down:"down", downgrade:"down", reducao:"down" };
+    linhas.forEach(function(l){
+      var mes = normalizaMes(l[iMes]); if (!mes) return;
+      if (iCart > -1 && chave(l[iCart]) && chave(l[iCart]) !== nomeCart) return;
+      var campoAlvo = mapa[chave(l[iStatus])]; if (!campoAlvo) return;
+      recolhido[mes] = recolhido[mes] || vazio();
+      recolhido[mes][campoAlvo] += Math.abs(num(l[iValor]));
+      achados++;
+    });
+  } else {
+    /* formato largo: uma linha por mês, uma coluna por status */
+    var iNovo = idx(["new","newmrr","novo","novasvendas"]);
+    var iUp   = idx(["up","upgrade","expansao"]);
+    var iRe   = idx(["reactivation","reativacao","winback"]);
+    var iCh   = idx(["churn","cancelamento"]);
+    var iDo   = idx(["down","downgrade","reducao"]);
+    linhas.forEach(function(l){
+      var mes = normalizaMes(l[iMes]); if (!mes) return;
+      if (iCart > -1 && chave(l[iCart]) && chave(l[iCart]) !== nomeCart) return;
+      recolhido[mes] = {
+        novo:  iNovo > -1 ? Math.abs(num(l[iNovo])) : 0,
+        up:    iUp   > -1 ? Math.abs(num(l[iUp]))   : 0,
+        reat:  iRe   > -1 ? Math.abs(num(l[iRe]))   : 0,
+        churn: iCh   > -1 ? Math.abs(num(l[iCh]))   : 0,
+        down:  iDo   > -1 ? Math.abs(num(l[iDo]))   : 0
+      };
+      achados++;
+    });
+  }
+
+  var listaMeses = Object.keys(recolhido).sort();
+  if (!listaMeses.length){ nota("Não encontrei meses válidos no arquivo."); return; }
+  listaMeses.forEach(function(m){ destino[m] = recolhido[m]; });
+
+  /* posiciona o mês vigente no último mês com dados, se o atual estiver vazio */
+  var ultimo = listaMeses[listaMeses.length-1];
+  if (!mesTemDados($("mesRef").value)) $("mesRef").value = ultimo;
+
+  gravarTudo(estado);
+  render();
+  nota(listaMeses.length + " mês(es) importado(s): " + listaMeses.map(curto).join(", ") + ".");
+}
+function mesTemDados(m){
+  var mv = (estado.mov && estado.mov[estado.carteira]) || {};
+  return !!mv[m];
+}
+
+/* ===================================================================
+   7d. GUIA PARA BATER A META
+
+   O total da carteira é digitado. O net MRR é o que liga um mês ao outro:
+       total do mês = total do mês anterior + net MRR
+
+   E o alvo do mês vigente reage de forma muito desigual aos meses da janela:
+       alvo = (M₋₃ + M₋₂ + M₋₁) × (1+g) − M₋₂ − M₋₁
+   Derivando, M₋₃ pesa (1+g) e os meses do meio pesam apenas g. Por isso o
+   mês que sai da janela é quase sempre o responsável pela meta estar alta.
+   =================================================================== */
+/* Faturamento mínimo do mês vigente para CAIR no tier de índice n.
+   Precisa superar o "Cresc. Máx" do tier anterior, por isso o centavo. */
+function alvoDoTier(r, n){
+  if (n <= 0) return r.tiers[0].rmv;
+  var limite = r.D7 * (1 + r.c.bandaMax[n-1]) * 3 - r.B6 - r.B7 + 0.01;
+  return Math.max(r.tiers[n].rmv, limite);
+}
+
+/* Médias históricas de cada componente, a partir de tudo que já foi importado. */
+function perfilHistorico(){
+  var mv = (estado.mov && estado.mov[estado.carteira]) || {};
+  var ms = Object.keys(mv).sort();
+  if (!ms.length) return null;
+  var s = {novo:0, up:0, reat:0, churn:0, down:0}, melhorUp = 0;
+  ms.forEach(function(m){
+    var d = mv[m];
+    s.novo += d.novo; s.up += d.up; s.reat += d.reat; s.churn += d.churn; s.down += d.down;
+    if (d.up > melhorUp) melhorUp = d.up;
+  });
+  var n = ms.length;
+  return { n:n, meses:ms, melhorUp:melhorUp,
+           novo:s.novo/n, up:s.up/n, reat:s.reat/n, churn:s.churn/n, down:s.down/n };
+}
+
+function renderPorque(r){
+  var corpo = $("porqueBody"), hint = $("porqueHint");
+  var ref = $("mesRef").value;
+  var mov = (estado.mov && estado.mov[estado.carteira]) || {};
+  var meses = [somaMes(ref,-3), somaMes(ref,-2), somaMes(ref,-1), ref];
+  var temMov = meses.some(function(m){ return mov[m]; });
+
+  if (!(r.D7 > 0) || !(r.B12 > 0)){
+    corpo.hidden = true; hint.hidden = false;
+    hint.textContent = "Preencha os quatro meses de faturamento para ver o diagnóstico.";
+    return;
+  }
+  if (!temMov){
+    corpo.hidden = true; hint.hidden = false;
+    hint.textContent = "Importe o relatório de Net Churn por Status do Metabase para ver de onde vem a sua meta.";
+    return;
+  }
+  corpo.hidden = false; hint.hidden = true;
+
+  var meta = r.metaIdx;
+  var alvo = alvoDoTier(r, meta);
+  var jaBateu = meta <= r.idx;
+
+  /* 1 — net MRR exigido pelo tier escolhido */
+  var netPrecisa = alvo - r.B7;
+  var netFeito   = r.B12 - r.B7;
+  var netFalta   = netPrecisa - netFeito;
+
+  $("porqueTitulo").textContent = "Guia para bater o Tier " + (meta+1)
+    + " (" + pct(r.c.comissao[meta],0) + ") em " + rotulo(ref);
+  $("vNetPrecisa").textContent = brl(netPrecisa);
+  $("vNetFeito").textContent   = brl(netFeito);
+  $("vNetFalta").textContent   = netFalta <= 0 ? "nada" : brl(netFalta);
+  $("vNetFalta").className     = "v " + (netFalta <= 0 ? "growth-pos" : "growth-neg");
+
+  var tk = r.B31;
+  var frase = "A carteira fechou " + rotulo(somaMes(ref,-1)) + " em " + brl(r.B7)
+    + " e precisa chegar a " + brl(alvo) + " para o Tier " + (meta+1)
+    + ". A diferença é o net MRR que o mês inteiro precisa produzir.";
+  if (jaBateu && netFalta <= 0){
+    frase += " Você já está no Tier " + (r.idx+1) + " — escolha um tier acima para ver o próximo degrau.";
+  } else if (netFalta > 0 && isFinite(tk) && tk > 0){
+    frase += " O que ainda falta equivale a " + dec(Math.ceil(netFalta/tk)) + " venda"
+      + (Math.ceil(netFalta/tk) > 1 ? "s" : "") + " no ticket de " + brl(tk) + ".";
+  }
+  $("netFrase").textContent = frase;
+
+  var dRef = mov[ref];
+  if (dRef){
+    var netRelatorio = dRef.novo + dRef.up + dRef.reat - dRef.churn - dRef.down;
+    if (Math.abs(netRelatorio - netFeito) > Math.max(1, Math.abs(netFeito) * 0.01)){
+      $("netFrase").textContent += " Atenção: o relatório aponta net MRR de " + brl(netRelatorio)
+        + " em " + rotulo(ref) + ", mas os totais digitados indicam " + brl(netFeito)
+        + ". Confira o mês, a carteira e os valores digitados.";
+    }
+  }
+
+  /* 2 — tabela dos quatro meses */
+  var papeis = ["régua — define a meta", "meio da janela", "meio da janela", "mês vigente"];
+  var nets = [], linhas = "";
+  meses.forEach(function(m, i){
+    var d = mov[m];
+    var net = d ? (d.novo + d.up + d.reat - d.churn - d.down) : NaN;
+    nets.push(net);
+    var destaque = (i === 0) ? " style='background:var(--accent-soft)'" : (i === 3 ? " style='font-weight:600'" : "");
+    linhas += "<tr" + destaque + ">"
+      + "<td>" + curto(m) + "</td>"
+      + (d
+          ? "<td class='growth-pos'>" + brl(d.novo) + "</td>"
+          + "<td class='growth-pos'>" + brl(d.up) + "</td>"
+          + "<td class='growth-pos'>" + brl(d.reat) + "</td>"
+          + "<td class='growth-neg'>-" + brl(d.churn) + "</td>"
+          + "<td class='growth-neg'>-" + brl(d.down) + "</td>"
+          + "<td class='" + (net >= 0 ? "growth-pos" : "growth-neg") + "'><b>" + (net>=0?"+":"") + brl(net) + "</b></td>"
+          : "<td colspan='6' style='text-align:left; color:var(--ink-3)'>sem dados no relatório</td>")
+      + "<td style='color:var(--ink-3)'>" + papeis[i] + "</td>"
+      + "</tr>";
+  });
+  $("tabNet").innerHTML = linhas;
+
+  /* 3 — o que te impactou */
+  var gAlvo = meta > 0 ? r.c.bandaMax[meta-1] : 0;
+  $("lblPeso1").textContent = "Cada R$ 1.000 faturados em " + rotulo(meses[0]) + " exigem de você";
+  $("vPeso1").textContent   = brl(1000 * (1 + gAlvo)) + " a mais hoje";
+  $("lblPeso2").textContent = "Cada R$ 1.000 faturados em " + rotulo(meses[1]) + " ou " + rotulo(meses[2]) + " exigem";
+  $("vPeso2").textContent   = brl(1000 * gAlvo) + " a mais hoje";
+
+  var netSaiu = nets[0];
+  var anteriores = [nets[0], nets[1], nets[2]].filter(isFinite);
+  var maiorAnterior = anteriores.length ? Math.max.apply(null, anteriores) : NaN;
+  var txt;
+  if (!isFinite(netSaiu)){
+    txt = "O relatório não trouxe " + rotulo(meses[0]) + ", que é o mês que define a régua. Sem ele não dá para dizer de onde veio a meta.";
+  } else if (netSaiu === maiorAnterior && netSaiu > 0){
+    txt = rotulo(meses[0]) + " foi o mês mais forte do trimestre passado, com net MRR de " + brl(netSaiu)
+        + ", e é justamente ele que saiu da janela. Aquele resultado entrou na base e inflou a sua comparação em "
+        + brl(netSaiu * 3) + " — três vezes o próprio valor, porque aparece no total dos três meses anteriores. "
+        + "Para o crescimento deste mês, ele contribuiu com zero. Você não está sendo cobrado por ter ido mal, "
+        + "e sim por ter ido muito bem três meses atrás.";
+  } else if (netSaiu < 0){
+    txt = rotulo(meses[0]) + " fechou negativo em " + brl(Math.abs(netSaiu))
+        + ", o que baixou a base de comparação. A régua deste mês está favorável — boa janela para subir de tier.";
+  } else {
+    txt = rotulo(meses[0]) + " teve net MRR de " + brl(netSaiu) + ", abaixo do melhor mês do trimestre ("
+        + brl(maiorAnterior) + "). A base de comparação não está no pior cenário.";
+  }
+  $("diagRegua").textContent = txt;
+
+  /* 4 — onde atacar, com números */
+  var h = perfilHistorico();
+  var d = mov[ref];
+  if (netFalta <= 0){
+    $("diagAcao").textContent = "O net MRR deste mês já cobre o Tier " + (meta+1)
+      + ". Para mirar mais alto, escolha o tier seguinte no seletor acima.";
+    $("tabAcao").innerHTML = "";
+    $("acaoFecho").textContent = "";
+    return;
+  }
+  if (!h){ $("tabAcao").innerHTML = ""; $("acaoFecho").textContent = ""; return; }
+
+  var falta = netFalta;
+  var atualNovo = d ? d.novo : 0, atualUp = d ? d.up : 0, atualDown = d ? d.down : 0, atualChurn = d ? d.churn : 0;
+
+  function pctCobre(v){ return Math.min(100, Math.max(0, v/falta*100)).toFixed(0) + "%"; }
+  function linhaAcao(nome, normal, precisa, cobre, obs){
+    return "<tr><td>" + nome + "<br><span style='color:var(--ink-3); font-size:11.5px'>" + obs + "</span></td>"
+      + "<td>" + brl(normal) + "</td>"
+      + "<td><b>" + precisa + "</b></td>"
+      + "<td class='growth-pos'>" + cobre + "</td></tr>";
+  }
+
+  var linhasAcao = "";
+  linhasAcao += linhaAcao(
+    "Venda nova",
+    h.novo,
+    (isFinite(tk) && tk > 0 ? dec(Math.ceil(falta/tk)) + " venda" + (Math.ceil(falta/tk)>1?"s":"") : brl(falta)),
+    "100%",
+    "média dos últimos " + h.n + " meses · este mês: " + brl(atualNovo));
+  linhasAcao += linhaAcao(
+    "Upgrade na base",
+    h.up,
+    brl(atualUp + falta) + " no mês",
+    pctCobre(h.up),
+    "seu melhor mês de upgrade foi " + brl(h.melhorUp) + " · este mês: " + brl(atualUp));
+  linhasAcao += linhaAcao(
+    "Segurar downgrade",
+    h.down,
+    "reduzir para " + brl(Math.max(0, atualDown - falta)),
+    pctCobre(atualDown),
+    "negativo todo mês · este mês: " + brl(atualDown));
+  linhasAcao += linhaAcao(
+    "Segurar churn",
+    h.churn,
+    "reduzir para " + brl(Math.max(0, atualChurn - falta)),
+    pctCobre(atualChurn),
+    "este mês: " + brl(atualChurn));
+  $("tabAcao").innerHTML = linhasAcao;
+
+  var perde = atualChurn + atualDown, ganha = atualNovo + atualUp + (d ? d.reat : 0);
+  var maiorSangria = atualChurn >= atualDown ? "churn" : "downgrade";
+  var valSangria   = Math.max(atualChurn, atualDown);
+  $("diagAcao").textContent =
+    "Faltam " + brl(falta) + " de net MRR para o Tier " + (meta+1) + ". "
+    + "Neste mês a carteira perdeu " + brl(perde) + " e ganhou " + brl(ganha) + ", e a maior sangria é "
+    + maiorSangria + " com " + brl(valSangria) + ". "
+    + "Qualquer combinação das linhas abaixo que some " + brl(falta) + " fecha a meta — "
+    + "para o cálculo do tier, venda nova, upgrade e downgrade evitado valem exatamente o mesmo.";
+
+  var caminhoUp = h.melhorUp > 0 ? (falta / h.melhorUp) : Infinity;
+  var fecho = "";
+  if (isFinite(caminhoUp) && caminhoUp <= 1){
+    fecho = "Atalho mais provável: um upgrade equivalente a " + (caminhoUp*100).toFixed(0)
+      + "% do seu melhor mês de expansão (" + brl(h.melhorUp) + ") já resolve o mês sozinho. "
+      + "Expansão na base costuma fechar mais rápido que prospecção.";
+  } else if (atualDown >= falta){
+    fecho = "Atalho mais provável: o downgrade deste mês (" + brl(atualDown)
+      + ") sozinho já é maior que o que falta. Reverter parte dele resolve sem precisar vender nada novo.";
+  } else {
+    fecho = "Nenhuma alavanca isolada cobre a falta — vai precisar combinar venda nova com expansão na base.";
+  }
+  $("acaoFecho").textContent = fecho;
+}
+
 $("btnSave").addEventListener("click", function(){
   var r = render();
   if (!(r.D7 > 0) || !(r.C12 > 0)){ nota("Preencha os quatro meses de faturamento antes de salvar."); return; }
@@ -886,7 +1280,7 @@ $("btnSave").addEventListener("click", function(){
     mesRef: ref,
     rotulo: curto(ref),
     carteira: r.c.nome,
-    trimestre: $("b35").textContent,
+    trimestre: estado.janelaAtual || "—",
     meses: [r.B5,r.B6,r.B7,r.B12],
     mediaAnterior: r.D7,
     mediaAtual: r.D12,
