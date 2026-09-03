@@ -134,6 +134,25 @@
   }
   th:first-child, td:first-child{text-align:left}
   td{padding:7px 8px; border-bottom:1px solid var(--line-2); text-align:right; white-space:nowrap}
+  .scroller{overflow-x:auto; margin:0 -4px; -webkit-overflow-scrolling:touch}
+  .scroller table{min-width:100%}
+
+  /* tabela de caminhos: texto longo, larguras fixas e quebra de linha */
+  #tabAcao td{white-space:normal; vertical-align:top; padding:11px 8px}
+  #tabAcao td:first-child{width:34%}
+  #tabAcao td:nth-child(2){width:20%; white-space:nowrap}
+  #tabAcao td:nth-child(3){width:30%; text-align:left}
+  #tabAcao td:nth-child(4){width:16%}
+  #tabAcao .sub{display:block; color:var(--ink-3); font-size:11.5px; margin-top:3px; line-height:1.35}
+
+  /* colunas secundárias somem quando não há espaço */
+  @media (max-width:820px){
+    .opt{display:none}
+    td, th{padding-left:6px; padding-right:6px}
+    table{font-size:12.5px}
+    #tabAcao td:first-child, #tabAcao td:nth-child(2),
+    #tabAcao td:nth-child(3), #tabAcao td:nth-child(4){width:auto}
+  }
   tbody tr.reached{background:linear-gradient(90deg, var(--accent-soft), transparent 70%)}
   tbody tr.reached td:first-child{box-shadow:inset 3px 0 0 var(--accent); font-weight:700}
   tbody tr.goal td{font-weight:600}
@@ -142,7 +161,6 @@
     padding:1px 6px; border-radius:999px; margin-left:7px; vertical-align:1px;
   }
   tbody tr.above{color:var(--ink-3)}
-  .scroller{overflow-x:auto; margin:0 -4px}
 
   /* ---------- ações ---------- */
   .actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px}
@@ -297,71 +315,72 @@
         </div>
       </section>
 
-      <section class="card" id="porqueCard">
-        <h2 id="porqueTitulo">Guia para bater a meta</h2>
-        <div class="field" style="border-top:none"><label><b>Tier que você quer atingir</b></label><select id="b36"></select></div>
-        <p class="hint" id="porqueHint" style="margin-top:12px">Preencha os quatro meses e importe o relatório do Metabase para ver o diagnóstico.</p>
-        <div id="porqueBody" hidden>
-          <div class="subhead">1 · Quanto de net MRR falta</div>
-          <div class="nextrow" style="border:none; padding-bottom:6px">
-            <div class="big">
-              <span class="k">Net MRR exigido no mês</span>
-              <span class="v accent" id="vNetPrecisa">—</span>
-            </div>
-            <div class="big">
-              <span class="k">Net MRR já realizado</span>
-              <span class="v" id="vNetFeito">—</span>
-            </div>
-            <div class="big">
-              <span class="k">Falta</span>
-              <span class="v growth-neg" id="vNetFalta">—</span>
-            </div>
-          </div>
-          <p class="hint" id="netFrase" style="margin:0 0 4px"></p>
-
-          <div class="subhead">2 · Net MRR dos meses que entram na conta</div>
-          <div class="scroller">
-            <table>
-              <thead><tr><th>Mês</th><th>New</th><th>Up</th><th>Reativação</th><th>Churn</th><th>Down</th><th>Net MRR</th><th>Papel</th></tr></thead>
-              <tbody id="tabNet"></tbody>
-            </table>
-          </div>
-
-          <div class="subhead">3 · O que te impactou</div>
-          <p class="hint" id="diagRegua" style="margin:0 0 8px"></p>
-          <div class="calcline"><span id="lblPeso1">—</span><span id="vPeso1">—</span></div>
-          <div class="calcline"><span id="lblPeso2">—</span><span id="vPeso2">—</span></div>
-
-          <div class="subhead">4 · Onde atacar</div>
-          <p class="hint" id="diagAcao" style="margin:0 0 10px"></p>
-          <div class="scroller">
-            <table>
-              <thead><tr><th>Caminho</th><th>Seu normal</th><th>O que fazer neste mês</th><th>Esforço</th></tr></thead>
-              <tbody id="tabAcao"></tbody>
-            </table>
-          </div>
-          <p class="hint" id="acaoFecho" style="margin:10px 0 0"></p>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Escada de tiers</h2>
-        <p class="hint" id="ladderHint">Média alvo, RMV do mês e o que cada faixa paga.</p>
-        <div class="scroller">
-          <table>
-            <thead>
-              <tr>
-                <th>Tier</th><th>Cresc. alvo</th><th>Média do mês</th><th>RMV do mês</th><th>Comissão</th><th>R$</th><th>Falta faturar</th><th>Vendas</th>
-              </tr>
-            </thead>
-            <tbody id="ladder"></tbody>
-          </table>
-        </div>
-        <p class="hint" style="margin:12px 0 0">As duas últimas colunas comparam o RMV de cada tier com o que já foi faturado no mês vigente.</p>
-      </section>
-
     </div>
   </div>
+
+    <section class="card" id="porqueCard">
+      <h2 id="porqueTitulo">Guia para bater a meta</h2>
+      <div class="field" style="border-top:none"><label><b>Tier que você quer atingir</b></label><select id="b36"></select></div>
+      <p class="hint" id="porqueHint" style="margin-top:12px">Preencha os quatro meses e importe o relatório do Metabase para ver o diagnóstico.</p>
+      <div id="porqueBody" hidden>
+        <div class="subhead">1 · Quanto de net MRR falta</div>
+        <div class="nextrow" style="border:none; padding-bottom:6px">
+          <div class="big">
+            <span class="k">Net MRR exigido no mês</span>
+            <span class="v accent" id="vNetPrecisa">—</span>
+          </div>
+          <div class="big">
+            <span class="k">Net MRR já realizado</span>
+            <span class="v" id="vNetFeito">—</span>
+          </div>
+          <div class="big">
+            <span class="k">Falta</span>
+            <span class="v growth-neg" id="vNetFalta">—</span>
+          </div>
+        </div>
+        <p class="hint" id="netFrase" style="margin:0 0 4px"></p>
+
+        <div class="subhead">2 · Net MRR dos meses que entram na conta</div>
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Mês</th><th>New</th><th>Up</th><th>Reativação</th><th>Churn</th><th>Down</th><th>Net MRR</th><th class="opt">Papel</th></tr></thead>
+            <tbody id="tabNet"></tbody>
+          </table>
+        </div>
+
+        <div class="subhead">3 · O que te impactou</div>
+        <p class="hint" id="diagRegua" style="margin:0 0 8px"></p>
+        <div class="calcline"><span id="lblPeso1">—</span><span id="vPeso1">—</span></div>
+        <div class="calcline"><span id="lblPeso2">—</span><span id="vPeso2">—</span></div>
+
+        <div class="subhead">4 · Onde atacar</div>
+        <p class="hint" id="diagAcao" style="margin:0 0 10px"></p>
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Caminho</th><th>Seu normal</th><th>O que fazer neste mês</th><th>Esforço</th></tr></thead>
+            <tbody id="tabAcao"></tbody>
+          </table>
+        </div>
+        <p class="hint" id="acaoFecho" style="margin:10px 0 0"></p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Escada de tiers</h2>
+      <p class="hint" id="ladderHint">Média alvo, RMV do mês e o que cada faixa paga.</p>
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr>
+              <th>Tier</th><th class="opt">Cresc. alvo</th><th class="opt">Média do mês</th><th>RMV do mês</th><th>Comissão</th><th class="opt">R$</th><th>Falta faturar</th><th>Vendas</th>
+            </tr>
+          </thead>
+          <tbody id="ladder"></tbody>
+        </table>
+      </div>
+      <p class="hint" style="margin:12px 0 0">As duas últimas colunas comparam o RMV de cada tier com o que já foi faturado no mês vigente.</p>
+    </section>
+
 
   <!-- ============ HISTÓRICO ============ -->
   <section class="card">
@@ -631,11 +650,11 @@ function render(){
     }
     linhas += "<tr class='"+cls.join(" ")+"'>"
       + "<td>Tier " + t.n + "</td>"
-      + "<td>" + (t.alvo >= 0 ? "+" : "") + pct(t.alvo, 2) + "</td>"
-      + "<td>" + (r.D7 > 0 ? brl(t.media) : "—") + "</td>"
+      + "<td class='opt'>" + (t.alvo >= 0 ? "+" : "") + pct(t.alvo, 2) + "</td>"
+      + "<td class='opt'>" + (r.D7 > 0 ? brl(t.media) : "—") + "</td>"
       + "<td>" + (r.D7 > 0 ? brl(t.rmv) : "—") + "</td>"
       + "<td>" + pct(t.comissao, 0) + "</td>"
-      + "<td>" + (r.D7 > 0 ? brl(t.reais) : "—") + "</td>"
+      + "<td class='opt'>" + (r.D7 > 0 ? brl(t.reais) : "—") + "</td>"
       + "<td>" + falta + "</td>"
       + "<td>" + vend + "</td>"
       + "</tr>";
@@ -840,7 +859,7 @@ function renderHistorico(){
     }
     linhas += "<tr>"
       + "<td>" + e.rotulo + "</td>"
-      + "<td>" + (e.trimestre || "—") + "</td>"
+      + "<td class='opt'>" + (e.trimestre || "—") + "</td>"
       + "<td><span class='tag'>" + e.carteira + "</span></td>"
       + "<td>" + brl(e.mediaAnterior) + "</td>"
       + "<td>" + brl(e.mediaAtual) + "</td>"
@@ -853,7 +872,7 @@ function renderHistorico(){
       + "</tr>";
   }
   alvo.innerHTML = "<div class='scroller'><table><thead><tr>"
-    + "<th>Mês</th><th>Trimestre móvel</th><th>Carteira</th><th>Média anterior</th><th>Média atual</th><th>Cresc.</th>"
+    + "<th>Mês</th><th class='opt'>Trimestre móvel</th><th>Carteira</th><th>Média anterior</th><th>Média atual</th><th>Cresc.</th>"
     + "<th>Tier</th><th>%</th><th>Remuneração</th><th>vs. anterior</th><th></th>"
     + "</tr></thead><tbody>" + linhas + "</tbody></table></div>";
 
@@ -1158,7 +1177,7 @@ function renderPorque(r){
           + "<td class='growth-neg'>-" + brl(d.down) + "</td>"
           + "<td class='" + (net >= 0 ? "growth-pos" : "growth-neg") + "'><b>" + (net>=0?"+":"") + brl(net) + "</b></td>"
           : "<td colspan='6' style='text-align:left; color:var(--ink-3)'>sem dados no relatório</td>")
-      + "<td style='color:var(--ink-3)'>" + papeis[i] + "</td>"
+      + "<td class='opt' style='color:var(--ink-3)'>" + papeis[i] + "</td>"
       + "</tr>";
   });
   $("tabNet").innerHTML = linhas;
@@ -1256,16 +1275,16 @@ function renderPorque(r){
     var p = (e*100).toFixed(0) + "% do normal";
     var cor = e <= 0.3 ? "var(--ok)" : (e <= 0.7 ? "var(--warn)" : "var(--bad)");
     var rot = e <= 0.3 ? "baixo" : (e <= 0.7 ? "médio" : (e <= 1 ? "alto" : "fora da curva"));
-    return "<b style='color:" + cor + "'>" + rot + "</b><br><span style='color:var(--ink-3); font-size:11.5px'>" + p + "</span>";
+    return "<b style='color:" + cor + "'>" + rot + "</b><span class='sub'>" + p + "</span>";
   }
   var linhasAcao = "";
   alavancas.forEach(function(a, i){
     var destaque = (i === 0 && isFinite(a.esforco)) ? " style='background:var(--accent-soft)'" : "";
     linhasAcao += "<tr" + destaque + ">"
       + "<td>" + (i === 0 && isFinite(a.esforco) ? "★ " : "") + a.nome
-        + "<br><span style='color:var(--ink-3); font-size:11.5px; white-space:normal; display:block; max-width:32ch'>" + a.como + "</span></td>"
-      + "<td>" + brl(a.normal) + "<br><span style='color:var(--ink-3); font-size:11.5px'>este mês " + brl(a.atual) + "</span></td>"
-      + "<td style='text-align:left; white-space:normal; max-width:24ch'>" + a.fazer + "</td>"
+        + "<span class='sub'>" + a.como + "</span></td>"
+      + "<td>" + brl(a.normal) + "<span class='sub'>este mês " + brl(a.atual) + "</span></td>"
+      + "<td>" + a.fazer + "</td>"
       + "<td>" + selo(a.esforco) + "</td></tr>";
   });
   $("tabAcao").innerHTML = linhasAcao;
