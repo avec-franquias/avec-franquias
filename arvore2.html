@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>avec | Árvore de Alavancas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   PALETA — idêntica ao projeto Previsão de Resultado
+   ============================================================ */
+:root{
+  /* neutros — texto e estrutura */
+  --ink:#14161c;        /* texto principal, títulos, borda inferior do cabeçalho */
+  --ink-2:#4b525e;      /* texto secundário, rótulos de campo */
+  --ink-3:#7b8391;      /* terciário: dicas, legendas, cabeçalho de tabela */
+  --line:#d2d6de;       /* bordas de card, contorno de input e botão */
+  --line-2:#e2e5ec;     /* divisórias internas */
+  --paper:#ffffff;      /* fundo da página */
+  --panel:#f3f4f7;      /* fundo dos cards */
+
+  /* semânticos — estado (funcionam como texto, não como preenchimento) */
+  --ok:#1f7a4d;         /* ganhos: new, upsell, reativação */
+  --warn:#9a5b06;       /* alertas, esforço médio */
+  --bad:#a4362f;        /* perdas: churn, downsell, cancelamento */
+
+  /* acento — trocado por JS conforme o nível; --accent-soft deriva do --accent */
+  --accent:#2e7c9b;
+  --accent-soft:rgba(46,124,155,.10);
+
+  /* fundos pontuais */
+  --aviso-fundo:#fdf6e7;  --aviso-borda:#f0d9a8;
+  --alerta-fundo:#fdf3e3;
+  --remover-hover:#fdeceb;
+
+  --r:10px; --r-p:8px;
+  --shadow:0 1px 2px rgba(20,22,28,.04);
+  --fonte-titulo:'Manrope','Inter',system-ui,sans-serif;
+  --fonte-texto:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--fonte-texto);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+h1,h2,h3,h4{font-family:var(--fonte-titulo);color:var(--ink)}
+.wrap{max-width:1360px;margin:0 auto;padding:0 20px 72px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.oculto{display:none !important}
+
+/* ---------- cabeçalho ---------- */
+header{background:var(--paper);border-bottom:2px solid var(--ink)}
+.head-in{max-width:1360px;margin:0 auto;padding:18px 20px 0}
+.topo{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.marca{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.marca .logo{font-family:var(--fonte-titulo);font-weight:800;font-size:25px;letter-spacing:-.02em;color:var(--ink)}
+.marca .titulo{font-family:var(--fonte-titulo);font-weight:600;font-size:14.5px;color:var(--ink-2)}
+.ferramentas{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.salvo{font-size:11.5px;color:var(--ink-3);display:flex;align-items:center;gap:6px}
+.salvo::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.salvo.erro{color:var(--warn)}
+.salvo.erro::before{background:var(--warn)}
+
+.mesbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:15px 0 2px}
+.navmes{display:flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:var(--r-p);padding:2px;background:var(--paper)}
+.navmes button{background:transparent;border:0;color:var(--ink-2);font-size:17px;line-height:1;padding:5px 11px;border-radius:6px;cursor:pointer}
+.navmes button:hover{background:var(--line-2);color:var(--ink)}
+.navmes .rotulo{font-family:var(--fonte-titulo);font-weight:700;font-size:14.5px;color:var(--ink);padding:0 8px;min-width:130px;text-align:center}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{background:var(--paper);border:1px solid var(--line);color:var(--ink-2);border-radius:20px;padding:4px 12px;font-size:11.5px;cursor:pointer;font-family:var(--fonte-titulo);font-weight:600}
+.chip:hover{background:var(--line-2);color:var(--ink)}
+.chip[aria-current=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.chip .x{font-style:normal;margin-left:7px;color:var(--ink-3);opacity:.55;cursor:pointer;font-size:13px;line-height:1}
+.chip .x:hover{color:var(--bad);opacity:1}
+.chip{display:inline-flex;align-items:center}
+
+.premissas{display:flex;flex-wrap:wrap;gap:8px;padding:12px 0 14px}
+.pcampo{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-p);padding:6px 10px;display:flex;flex-direction:column;gap:3px;min-width:106px}
+.pcampo label{font-size:10.5px;color:var(--ink-2);font-weight:600}
+.pcampo input,.pcampo select{background:var(--paper);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-weight:600;font-size:13px;padding:4px 7px;font-family:var(--fonte-titulo);width:100%}
+.pcampo input:focus,.pcampo select:focus{border-color:var(--accent)}
+.pcampo.claro{background:var(--panel)}
+
+nav.abas{display:flex;gap:4px;overflow-x:auto;padding-bottom:9px}
+nav.abas button{background:transparent;border:1px solid transparent;border-radius:20px;color:var(--ink-2);font-family:var(--fonte-titulo);font-weight:700;font-size:12.5px;padding:7px 15px;cursor:pointer;white-space:nowrap}
+nav.abas button:hover{background:var(--line-2);color:var(--ink)}
+nav.abas button[aria-selected=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+nav.abas .pino{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;margin-left:6px}
+
+/* ---------- botões e campos ---------- */
+button.acao{background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:var(--r-p);padding:8px 15px;font-family:var(--fonte-titulo);font-weight:700;font-size:12.5px;cursor:pointer}
+button.acao:hover{background:#000}
+button.acao.clara,button.acao.fantasma{background:var(--paper);color:var(--ink);border:1px solid var(--line)}
+button.acao.clara:hover,button.acao.fantasma:hover{background:var(--line-2)}
+button.acao.remover{background:var(--paper);border-color:var(--line);color:var(--bad)}
+button.acao.remover:hover{background:var(--remover-hover);border-color:var(--bad)}
+button.acao:disabled{opacity:.45;cursor:not-allowed}
+input.edit{background:var(--paper);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-weight:600;font-family:var(--fonte-titulo);padding:3px 6px;text-align:right}
+input.edit:focus{border-color:var(--accent)}
+
+.painel{display:none;padding-top:22px}
+.painel.ativo{display:block}
+.aviso{color:var(--ink-2);font-size:12px;margin:0 0 18px}
+.legenda{display:inline-block;background:var(--paper);border:1px solid var(--line);border-radius:4px;width:13px;height:11px;vertical-align:-1px;margin-right:5px}
+.secao-tit{font-size:11.5px;font-weight:700;color:var(--ink-3);margin:34px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+.faixa{display:flex;gap:12px;align-items:flex-start;background:var(--alerta-fundo);border:1px solid var(--aviso-borda);border-radius:var(--r);padding:13px 16px;margin-bottom:16px}
+.faixa .ico{font-size:17px;line-height:1.2}
+.faixa h3{margin:0 0 3px;font-size:13.5px;color:var(--warn)}
+.faixa p{margin:0;font-size:12.5px;color:var(--ink-2)}
+.faixa.amarela{background:var(--aviso-fundo);border-color:var(--aviso-borda)}
+.faixa.amarela p{color:var(--warn)}
+
+/* ---------- árvore ---------- */
+.arvore{display:grid;grid-template-columns:236px 1fr;gap:16px;align-items:start}
+.resultado{display:flex;flex-direction:column;gap:12px;position:sticky;top:14px}
+.rcard{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:var(--r);padding:13px 15px;box-shadow:var(--shadow)}
+.rcard .rot{font-size:10.5px;font-weight:700;color:var(--ink-3);margin-bottom:3px}
+.rcard .val{font-family:var(--fonte-titulo);font-weight:800;font-size:25px;letter-spacing:-.02em;line-height:1.1;color:var(--accent)}
+.rcard.neutro{border-top-color:var(--line)}
+.rcard.neutro .val{color:var(--ink)}
+.rcard .pe{font-size:11px;color:var(--ink-2);margin-top:4px}
+
+.blocos{display:flex;flex-direction:column;gap:12px}
+.bloco{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px;box-shadow:var(--shadow);overflow-x:auto}
+.grade{display:grid;grid-template-columns:170px repeat(4,minmax(150px,1fr));gap:9px;min-width:820px}
+.driver{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;display:flex;flex-direction:column;justify-content:center}
+.driver .rot{font-size:10.5px;font-weight:700;color:var(--ink-3)}
+.driver .val{font-family:var(--fonte-titulo);font-weight:800;font-size:23px;letter-spacing:-.02em;margin-top:2px;color:var(--ink)}
+.driver .pe{font-size:10.5px;color:var(--ink-2);margin-top:3px}
+.driver.new .val{color:var(--ok)}
+.driver.exp .val{color:var(--ok)}
+.driver.chn .val{color:var(--bad)}
+
+.no{border:1px solid var(--line);border-radius:var(--r);background:var(--paper);display:flex;flex-direction:column}
+.no .cab{font-size:10px;font-weight:700;color:var(--ink-3);padding:7px 10px 6px;line-height:1.25;border-bottom:1px solid var(--line-2)}
+.no .corpo{padding:8px 10px 9px;display:flex;flex-direction:column;gap:5px;flex:1;justify-content:center}
+.no .val{font-family:var(--fonte-titulo);font-weight:800;font-size:21px;color:var(--ink);letter-spacing:-.02em}
+.no .nota{font-size:10.5px;color:var(--ink-3)}
+.no .prem{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--ink-2)}
+.no .prem input{width:60px;font-size:11.5px}
+.no.vazio{border:0;background:transparent}
+.marcador{display:inline-flex;align-items:center;gap:5px;background:var(--accent-soft);color:var(--accent);border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:700;margin-top:3px;width:fit-content}
+
+/* ---------- tabelas ---------- */
+table{border-collapse:collapse;width:100%;font-size:12.5px;background:var(--paper)}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line-2);text-align:right;white-space:nowrap}
+th{background:var(--paper);color:var(--ink-3);font-family:var(--fonte-titulo);font-weight:700;font-size:11px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
+th:first-child,td:first-child{text-align:left}
+tr.grupo td{background:var(--panel);color:var(--ink-2);font-family:var(--fonte-titulo);font-weight:700;font-size:11px;text-align:left}
+tr.total td{border-top:1px solid var(--line);font-weight:700}
+.rolagem{overflow:auto;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);max-height:74vh;background:var(--paper)}
+.pct-bom{color:var(--ok);font-weight:700}
+.pct-ruim{color:var(--bad);font-weight:700}
+.pct-neutro{color:var(--ink-3)}
+
+/* ---------- cartões ---------- */
+.cartoes{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:11px}
+.cartao{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.cartao .cab{font-size:10.5px;font-weight:700;color:var(--ink-3);padding:8px 11px 7px;background:var(--paper);border-bottom:1px solid var(--line-2)}
+.cartao .linha{display:flex;justify-content:space-between;padding:7px 11px;font-size:12.5px;border-bottom:1px solid var(--line-2)}
+.cartao .linha span:first-child{color:var(--ink-2);font-size:11px}
+.cartao .linha b{font-family:var(--fonte-titulo);font-size:14px;color:var(--ink)}
+.cartao .rodape{padding:7px 11px;font-family:var(--fonte-titulo);font-weight:700;font-size:12.5px}
+
+/* ---------- dashboard ---------- */
+.veredito{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:var(--r);padding:17px 19px;box-shadow:var(--shadow);margin-bottom:14px}
+.veredito h2{margin:0 0 5px;font-size:20px;letter-spacing:-.01em;color:var(--ink)}
+.veredito.bom h2{color:var(--ok)} .veredito.medio h2{color:var(--warn)} .veredito.ruim h2{color:var(--bad)}
+.veredito p{margin:0;font-size:13px;color:var(--ink-2);max-width:82ch}
+.veredito .barra-ritmo{margin-top:13px;background:var(--line);border-radius:6px;height:8px;overflow:hidden;max-width:520px}
+.veredito .barra-ritmo i{display:block;height:100%;border-radius:6px;background:var(--accent)}
+.veredito.bom .barra-ritmo i{background:var(--ok)}
+.veredito.medio .barra-ritmo i{background:var(--warn)}
+.veredito.ruim .barra-ritmo i{background:var(--bad)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:var(--r);padding:11px 13px;box-shadow:var(--shadow)}
+.kpi.risco{border-top-color:var(--bad)} .kpi.ok{border-top-color:var(--ok)} .kpi.alerta{border-top-color:var(--warn)}
+.kpi .rot{font-size:10.5px;color:var(--ink-3);font-weight:600}
+.kpi .val{font-family:var(--fonte-titulo);font-weight:800;font-size:23px;color:var(--ink);letter-spacing:-.02em;margin-top:2px}
+.kpi.risco .val{color:var(--bad)} .kpi.ok .val{color:var(--ok)}
+.kpi .pe{font-size:11px;color:var(--ink-2);margin-top:2px}
+.diags{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:11px}
+.diag{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.diag .cab{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;background:var(--paper);border-bottom:1px solid var(--line-2);font-family:var(--fonte-titulo);font-weight:700;font-size:12px;color:var(--ink-2)}
+.diag .cab b{font-size:15px;color:var(--ink)}
+.diag .corpo{padding:11px 13px}
+.elos{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.elo{display:grid;grid-template-columns:1fr 92px 52px;gap:8px;align-items:center;font-size:11.5px;color:var(--ink-2)}
+.elo .trilho{background:var(--line);border-radius:4px;height:8px;overflow:hidden}
+.elo .trilho i{display:block;height:100%;border-radius:4px;background:var(--accent)}
+.elo.fraco span:first-child{font-weight:700;color:var(--bad)}
+.elo.fraco .trilho i{background:var(--bad)}
+.diag .conselho{font-size:12px;color:var(--ink-2);background:var(--paper);border:1px solid var(--line-2);border-radius:var(--r-p);padding:9px 11px}
+.grafico{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:13px}
+.grafico svg{width:100%;height:auto;display:block}
+.legenda-graf{display:flex;gap:14px;font-size:11.5px;color:var(--ink-2);margin-top:8px;flex-wrap:wrap}
+.legenda-graf i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+
+/* ---------- radar ---------- */
+.solta{border:1px dashed var(--line);border-radius:var(--r);background:var(--panel);padding:30px 22px;text-align:center}
+.solta.sobre{border-color:var(--accent);background:var(--accent-soft)}
+.solta h3{margin:0 0 5px;font-size:15px}
+.solta p{margin:0 0 14px;color:var(--ink-2);font-size:12.5px}
+.solta .colunas{font-size:11px;color:var(--ink-3);margin-top:12px}
+.filtros{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:12px}
+.filtros input[type=search],.filtros select{border:1px solid var(--line);border-radius:var(--r-p);padding:7px 10px;font-size:12.5px;font-family:var(--fonte-texto);background:var(--paper);color:var(--ink)}
+.filtros input[type=search]{min-width:230px}
+.filtros input:focus,.filtros select:focus{border-color:var(--accent)}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-p);padding:6px 11px;cursor:pointer}
+.chk:hover{background:var(--line-2)}
+.tag{display:inline-block;border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.t-inad{background:var(--remover-hover);color:var(--bad)}
+.t-ativo{background:rgba(31,122,77,.10);color:var(--ok)}
+.t-susp{background:var(--alerta-fundo);color:var(--warn)}
+.t-churn{background:var(--line-2);color:var(--ink-2)}
+.u-vencido{background:var(--bad);color:#fff}
+.u-critico{background:var(--remover-hover);color:var(--bad)}
+.u-alerta{background:var(--alerta-fundo);color:var(--warn)}
+.u-atencao{background:var(--accent-soft);color:var(--accent)}
+.u-monitorar{background:var(--line-2);color:var(--ink-2)}
+.barras{display:flex;flex-direction:column;gap:6px}
+.barra{display:grid;grid-template-columns:92px 1fr 128px;gap:9px;align-items:center;font-size:12px;color:var(--ink-2)}
+.barra .trilho{background:var(--line-2);border-radius:4px;height:16px;overflow:hidden}
+.barra .preench{background:var(--accent);height:100%;border-radius:4px}
+.vazio-msg{color:var(--ink-3);font-size:12.5px;padding:24px;text-align:center}
+
+/* ---------- menu e toast ---------- */
+.menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 24px -10px rgba(20,22,28,.22);padding:5px;min-width:250px;z-index:60}
+.menu button{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:var(--r-p);padding:8px 11px;cursor:pointer;font-family:var(--fonte-titulo);font-weight:700;font-size:12.5px;color:var(--ink)}
+.menu button:hover{background:var(--line-2)}
+.menu button small{display:block;font-family:var(--fonte-texto);font-weight:400;font-size:11px;color:var(--ink-3);margin-top:1px}
+.dlg-fundo{position:fixed;inset:0;background:rgba(20,22,28,.38);display:flex;align-items:center;justify-content:center;padding:20px;z-index:120}
+.dlg{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 18px 48px -16px rgba(20,22,28,.42);padding:20px 22px;max-width:460px;width:100%}
+.dlg h3{margin:0 0 7px;font-size:16px;color:var(--ink)}
+.dlg p{margin:0 0 17px;font-size:13px;color:var(--ink-2);white-space:pre-line;line-height:1.5}
+.dlg-acoes{display:flex;justify-content:flex-end;gap:8px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:11px 18px;border-radius:var(--r-p);font-size:13px;font-family:var(--fonte-titulo);font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:99}
+#toast.ver{opacity:1;transform:translateX(-50%) translateY(0)}
+
+footer{color:var(--ink-3);font-size:11.5px;text-align:center;padding:26px 20px 0}
+@media (max-width:820px){
+  .arvore{grid-template-columns:1fr}
+  .resultado{position:static;flex-direction:row;flex-wrap:wrap}
+  .rcard{flex:1 1 200px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+
+/* ============================================================
+   IMPRESSÃO / PDF
+   ============================================================ */
+.capa{display:none}
+@media print{
+  @page{size:A4 landscape;margin:11mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:#fff;font-size:10.5px}
+  header,nav.abas,footer,#toast,.ferramentas,.mesbar,.filtros,.solta,button,.menu{display:none !important}
+  .wrap{max-width:none;padding:0}
+  .capa{display:block;border-bottom:2px solid var(--ink);padding-bottom:9px;margin-bottom:14px}
+  .capa .l1{display:flex;justify-content:space-between;align-items:baseline}
+  .capa .logo{font-family:var(--fonte-titulo);font-weight:800;font-size:20px;color:var(--ink)}
+  .capa .m{font-family:var(--fonte-titulo);font-weight:700;font-size:15px;color:var(--ink)}
+  .capa .d{font-size:10px;color:var(--ink-2)}
+  .painel{display:none !important;padding-top:0}
+  .painel.imprimir{display:block !important;break-after:page}
+  .painel.imprimir:last-of-type{break-after:auto}
+  .rolagem{max-height:none;overflow:visible;box-shadow:none}
+  .bloco,.grafico,.cartao,.kpi,.diag,.rcard,.veredito{box-shadow:none;break-inside:avoid}
+  .grade{min-width:0}
+  .resultado{position:static}
+  th{position:static}
+  .secao-tit{break-after:avoid}
+  input.edit,.pcampo input,.pcampo select{border:0;background:transparent;color:var(--ink);padding:0}
+  .aviso{font-size:9.5px}
+}
+
+</style>
+</head>
+<body>
+
+<div class="capa">
+  <div class="l1">
+    <span class="logo">avec</span>
+    <span class="m" id="capa-mes">—</span>
+  </div>
+  <div class="l1">
+    <span class="d" id="capa-franquia">—</span>
+    <span class="d" id="capa-data">—</span>
+  </div>
+</div>
+
+<header>
+  <div class="head-in">
+    <div class="topo">
+      <div class="marca">
+        <span class="logo">avec</span>
+        <span class="titulo">Árvore de Alavancas</span>
+      </div>
+      <div class="ferramentas">
+        <span class="salvo" id="salvo">Salvo automaticamente</span>
+        <div style="position:relative">
+          <button class="acao clara" id="btn-imprimir" aria-haspopup="true" aria-expanded="false">Salvar em PDF</button>
+          <div id="menu-imprimir" class="menu oculto" role="menu">
+            <button data-alvos="p-dash,p-plano,p-semanal" role="menuitem">Plano completo<small>Dashboard, árvore e acompanhamento semanal</small></button>
+            <button data-alvos="p-plano" role="menuitem">Só a árvore<small>Uma página com o plano do mês</small></button>
+            <button data-alvos="p-dash" role="menuitem">Só o dashboard<small>Performance e gargalos</small></button>
+            <button data-alvos="p-radar" role="menuitem">Lista de pré-churn<small>Clientes para contato proativo</small></button>
+            <button data-alvos="atual" role="menuitem">Aba aberta agora<small>O que está na tela</small></button>
+          </div>
+        </div>
+        <button class="acao clara" id="btn-backup">Backup</button>
+        <button class="acao clara" id="btn-restaurar">Restaurar</button>
+        <button class="acao remover" id="btn-zerar">Começar do zero</button>
+        <input type="file" id="arq-backup" accept=".json" class="oculto">
+      </div>
+    </div>
+
+    <div class="mesbar">
+      <div class="navmes">
+        <button id="mes-ant" title="Mês anterior" aria-label="Mês anterior">‹</button>
+        <span class="rotulo" id="mes-rotulo">—</span>
+        <button id="mes-prox" title="Próximo mês" aria-label="Próximo mês">›</button>
+      </div>
+      <input type="month" id="i-mes" class="oculto">
+      <button class="acao clara" id="btn-escolher-mes">Escolher mês</button>
+      <div class="chips" id="chips-meses"></div>
+    </div>
+
+    <div class="premissas">
+      <div class="pcampo"><label for="i-franquia">Franquia</label><input type="text" id="i-franquia" placeholder="Nome da franquia" style="min-width:150px"></div>
+      <div class="pcampo"><label for="i-nivel">Nível</label>
+        <select id="i-nivel"><option>Bronze</option><option>Prata</option><option>Ouro</option><option>Diamante</option></select></div>
+      <div class="pcampo"><label for="i-carteira">Carteira início (R$)</label><input type="number" id="i-carteira" step="0.01"></div>
+      <div class="pcampo"><label for="i-dias">Dias úteis</label><input type="number" id="i-dias" min="1"></div>
+      <div class="pcampo"><label for="i-vend">Vendedores</label><input type="number" id="i-vend" min="1"></div>
+      <div class="pcampo"><label for="i-semanas">Semanas concluídas</label><input type="number" id="i-semanas" min="0" max="5"></div>
+    </div>
+
+    <nav class="abas" role="tablist">
+      <button role="tab" id="tab-dash" aria-selected="true" aria-controls="p-dash">Dashboard</button>
+      <button role="tab" id="tab-plano" aria-selected="false" aria-controls="p-plano">Plano do mês</button>
+      <button role="tab" id="tab-proj" aria-selected="false" aria-controls="p-proj">Plano vs projeção</button>
+      <button role="tab" id="tab-semanal" aria-selected="false" aria-controls="p-semanal">Semanal</button>
+      <button role="tab" id="tab-radar" aria-selected="false" aria-controls="p-radar">Radar pré-churn <span class="pino oculto" id="pino-radar">0</span></button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ================= DASHBOARD ================= -->
+<section class="painel ativo" id="p-dash" role="tabpanel" aria-labelledby="tab-dash">
+  <div id="dash-veredito"></div>
+  <div class="kpis" id="dash-kpis"></div>
+
+  <h2 class="secao-tit">Onde está o gargalo</h2>
+  <p class="aviso">Cada alavanca é uma corrente: esforço, conversão e ticket. A barra mostra quanto do plano foi entregue até aqui e o elo mais fraco aparece destacado. É nele que a conversa da semana deve começar.</p>
+  <div class="diags" id="dash-diags"></div>
+
+  <h2 class="secao-tit">Funil do mês — plano até aqui vs realizado</h2>
+  <div class="grafico" id="dash-funil"></div>
+
+  <h2 class="secao-tit">Histórico</h2>
+  <div class="cartoes" style="grid-template-columns:repeat(auto-fit,minmax(360px,1fr))">
+    <div class="grafico" id="dash-hist-netnew"></div>
+    <div class="grafico" id="dash-hist-carteira"></div>
+  </div>
+  <div class="rolagem" style="margin-top:12px;max-height:none"><table id="t-hist">
+    <thead><tr><th>Mês</th><th>Carteira início</th><th>New MRR</th><th>Expansion</th><th>Churn</th><th>Net new</th><th>% da meta</th><th>Carteira fim</th></tr></thead>
+    <tbody></tbody></table></div>
+</section>
+
+<!-- ================= PLANO DO MÊS ================= -->
+<section class="painel" id="p-plano" role="tabpanel" aria-labelledby="tab-plano">
+  <div class="faixa amarela oculto" id="faixa-vazio">
+    <div class="ico">✏️</div>
+    <div style="flex:1">
+      <h3>Este mês está em branco</h3>
+      <p>Preencha a franquia e a carteira no topo, as metas do nível no fim desta aba e as premissas de conversão e ticket nos campos da árvore.
+        Se preferir partir de um exemplo e ajustar depois, carregue os valores de referência.</p>
+      <div style="margin-top:9px"><button class="acao" id="btn-referencia">Carregar valores de referência</button></div>
+    </div>
+  </div>
+  <div class="faixa oculto" id="faixa-novo">
+    <div class="ico">🆕</div>
+    <div><h3 id="faixa-novo-tit">Mês novo</h3>
+      <p id="faixa-novo-txt">Realizados começam zerados. As premissas e a carteira inicial vieram do mês anterior — ajuste se precisar.</p></div>
+  </div>
+  <p class="aviso"><span class="legenda"></span>Os campos com contorno são premissas que você edita. Todo o resto é calculado.</p>
+
+  <div class="arvore">
+    <div class="resultado">
+      <div class="rcard"><div class="rot">NET NEW MRR (META)</div><div class="val" id="v-netnew">—</div><div class="pe">New + Expansion + Churn</div></div>
+      <div class="rcard neutro"><div class="rot">CARTEIRA FIM DO MÊS</div><div class="val" id="v-carteirafim">—</div><div class="pe" id="v-cresc">—</div></div>
+    </div>
+
+    <div class="blocos">
+      <div class="bloco"><div class="grade">
+        <div class="driver new" style="grid-row:span 3">
+          <div class="rot">NEW MRR</div><div class="val" id="v-newmrr">—</div><div class="pe">novos clientes — 3 origens</div></div>
+        <div class="no"><div class="cab g">FECHAMENTOS NOVO CLIENTE PROSPECÇÃO</div><div class="corpo">
+          <div class="val" id="v-fechprosp">—</div>
+          <div class="prem"><input class="edit" type="number" id="i-mixProsp" step="1" min="0" max="100"><span>% do mix</span></div></div></div>
+        <div class="no"><div class="cab g">PROPOSTA NOVO CLIENTE PROSPECÇÃO</div><div class="corpo">
+          <div class="val" id="v-propprosp">—</div>
+          <div class="prem"><input class="edit" type="number" id="i-convPropFech" step="1"><span>% prop.→fech.</span></div></div></div>
+        <div class="no"><div class="cab v">REUNIÃO NOVO CLIENTE PROSPECÇÃO (PAP ou online)</div><div class="corpo">
+          <div class="val" id="v-reuniao">—</div>
+          <div class="prem"><input class="edit" type="number" id="i-convVisitaProp" step="1"><span>% visita→prop.</span></div></div></div>
+        <div class="no"><div class="cab v">VISITAS OU REUNIÕES / DIA / VENDEDOR</div><div class="corpo">
+          <div class="val" id="v-visitasdia">—</div><div class="nota">÷ dias ÷ vendedores</div></div></div>
+
+        <div class="no"><div class="cab g">FECHAMENTO INBOUND</div><div class="corpo">
+          <div class="val" id="v-fechin">—</div><div class="nota">mix restante</div></div></div>
+        <div class="no"><div class="cab g">PROPOSTAS INBOUND</div><div class="corpo">
+          <div class="val" id="v-propin">—</div>
+          <div class="prem"><input class="edit" type="number" id="i-convPropFechIn" step="1"><span>% prop.→fech.</span></div></div></div>
+        <div class="no"><div class="cab m">LEADS INBOUND</div><div class="corpo">
+          <div class="val" id="v-leadsin">—</div>
+          <div class="prem"><input class="edit" type="number" id="i-convLeadProp" step="1"><span>% lead→prop.</span></div></div></div>
+        <div class="no vazio"></div>
+
+        <div class="no"><div class="cab m">TICKET MÉDIO — NOVOS (R$)</div><div class="corpo">
+          <div class="prem"><input class="edit" type="number" id="i-ticketNovos" step="1" style="width:82px;font-size:19px;font-weight:800"></div>
+          <div class="nota">mesmo ticket nas 3 origens</div></div></div>
+        <div class="no vazio"></div><div class="no vazio"></div><div class="no vazio"></div>
+      </div></div>
+
+      <div class="bloco"><div class="grade">
+        <div class="driver exp" style="grid-row:span 2">
+          <div class="rot">EXPANSION</div><div class="val" id="v-expansion">—</div><div class="pe">meta única do nível</div></div>
+        <div class="no"><div class="cab e">UPSELL NECESSÁRIO (R$)</div><div class="corpo">
+          <div class="val" id="v-upsell">—</div>
+          <div class="prem"><input class="edit" type="number" id="i-pctEspontaneo" step="1"><span>% espontâneo</span></div></div></div>
+        <div class="no"><div class="cab e">VENDAS ADICIONAIS (#)</div><div class="corpo">
+          <div class="val" id="v-vendasadic">—</div>
+          <div class="prem">R$ <input class="edit" type="number" id="i-ticketUpsell" step="1"><span>/upsell</span></div></div></div>
+        <div class="no"><div class="cab v">VISITAS OU REUNIÕES ONLINE DE BASE NO MÊS</div><div class="corpo">
+          <div class="val" id="v-visitasbase">—</div>
+          <div class="prem"><input class="edit" type="number" id="i-convVisitaUpsell" step="1"><span>% visita→upsell</span></div></div></div>
+        <div class="no vazio"></div>
+        <div class="no"><div class="cab e">DOWNSELL ESPERADO (R$)</div><div class="corpo">
+          <div class="prem">R$ <input class="edit" type="number" id="i-downsell" step="10" style="width:82px;font-size:17px;font-weight:800"></div>
+          <div class="nota">defendido caso a caso</div></div></div>
+        <div class="no vazio"></div><div class="no vazio"></div><div class="no vazio"></div>
+      </div></div>
+
+      <div class="bloco"><div class="grade">
+        <div class="driver chn" style="grid-row:span 2">
+          <div class="rot">CHURN</div><div class="val" id="v-churn">—</div><div class="pe" id="v-churnpe">—</div></div>
+        <div class="no"><div class="cab g">CANCELAM. ORÇADOS</div><div class="corpo">
+          <div class="val" id="v-cancel">—</div><div class="nota">÷ R$ médio cancelado</div></div></div>
+        <div class="no"><div class="cab v">VISITAS PRÉ-CHURN</div><div class="corpo">
+          <div class="prem"><input class="edit" type="number" id="i-visitasPreChurn" step="1" style="width:76px;font-size:19px;font-weight:800"></div>
+          <div class="prem"><input class="edit" type="number" id="i-reversao" step="5"><span>% reversão alvo</span></div></div></div>
+        <div class="no"><div class="cab g">RADAR PRÉ-CHURN (#)</div><div class="corpo">
+          <div class="prem"><input class="edit" type="number" id="i-radar" step="1" style="width:76px;font-size:19px;font-weight:800"></div>
+          <div class="nota">clientes em risco</div>
+          <div class="marcador oculto" id="marc-radar"></div></div></div>
+        <div class="no vazio"></div>
+        <div class="no"><div class="cab m">TICKET — CANCELADOS (R$)</div><div class="corpo">
+          <div class="prem">R$ <input class="edit" type="number" id="i-ticketCancel" step="1" style="width:82px;font-size:17px;font-weight:800"></div>
+          <div class="nota">MRR médio de quem cancela</div></div></div>
+        <div class="no vazio"></div><div class="no vazio"></div><div class="no vazio"></div>
+      </div></div>
+    </div>
+  </div>
+
+  <h2 class="secao-tit">Metas do nível</h2>
+  <p class="aviso">É aqui que entram as metas da franqueadora. A linha destacada é o nível deste mês e alimenta a árvore inteira:
+    nova receita vira o New MRR, expansão vira o Expansion e o % de cancelamento multiplica a carteira para virar o Churn.
+    <br>As metas valem para o mês aberto — meses novos herdam estes valores, e meses já fechados não são alterados.</p>
+  <div class="rolagem" style="max-width:640px;max-height:none">
+    <table id="t-niveis"><thead><tr><th>Nível</th><th>Nova receita (R$)</th><th>Expansão (R$)</th><th>% cancelamento</th></tr></thead><tbody></tbody></table>
+  </div>
+  <p class="aviso" style="margin-top:14px;color:var(--ink);font-weight:600">Regra de gestão: a rua move a árvore por venda (leads), pré-churn e upsell nas visitas de base. Discuta esforço e qualidade; o resultado é consequência.</p>
+  <div style="margin-top:18px"><button class="acao remover" id="btn-apagar-mes">Apagar dados deste mês</button></div>
+</section>
+
+<!-- ================= PLANO vs PROJEÇÃO ================= -->
+<section class="painel" id="p-proj" role="tabpanel" aria-labelledby="tab-proj">
+  <p class="aviso">Projeção = real MTD ÷ dias úteis decorridos × dias úteis do mês. Tickets projetam o valor MTD corrente. Fonte: aba Semanal.
+    <br>Verde = no ritmo, vermelho = atrás. Em cancelados, churn e downsell a escala é invertida.</p>
+  <div class="cartoes" id="proj-topo" style="margin-bottom:16px"></div>
+  <h2 class="secao-tit">Resultado</h2><div class="cartoes" id="proj-res"></div>
+  <h2 class="secao-tit">Funil e esforço</h2><div class="cartoes" id="proj-funil"></div>
+  <h2 class="secao-tit">Qualidade — conversões e tickets</h2><div class="cartoes" id="proj-qual"></div>
+</section>
+
+<!-- ================= SEMANAL ================= -->
+<section class="painel" id="p-semanal" role="tabpanel" aria-labelledby="tab-semanal">
+  <p class="aviso"><span class="legenda"></span>Preencha as colunas “Real”. Os dias úteis por semana já vêm calculados do calendário do mês — ajuste se houver feriado.
+    <br>“% da meta” = real MTD ÷ plano MTD. Em cancelados, churn e downsell, acima de 100% é pior que o plano.</p>
+  <div class="filtros"><button class="acao fantasma" id="btn-limpar-real">Limpar realizados do mês</button></div>
+  <div class="rolagem"><table id="t-semanal"><thead></thead><tbody></tbody></table></div>
+
+  <h2 class="secao-tit">Ações da semana</h2>
+  <div class="rolagem" style="max-height:none"><table id="t-acoes">
+    <thead><tr><th style="min-width:190px">Estabelecimento</th><th style="min-width:220px">Observação</th><th style="min-width:190px">Ação</th><th style="min-width:190px">Responsável / retorno</th><th>Preço (R$)</th></tr></thead>
+    <tbody></tbody>
+    <tfoot><tr class="total"><td colspan="4">Total</td><td id="acoes-total">R$ 0</td></tr></tfoot></table></div>
+  <div style="margin-top:10px"><button class="acao fantasma" id="btn-add-acao">Adicionar linha</button></div>
+</section>
+
+<!-- ================= RADAR ================= -->
+<section class="painel" id="p-radar" role="tabpanel" aria-labelledby="tab-radar">
+  <div class="faixa amarela">
+    <div class="ico">📅</div>
+    <div><h3>Antes de exportar: configure a data de posição para ontem</h3>
+      <p>No relatório <b>Sua Carteira 4.0 — Detalhe Receita SaaS</b>, a data de posição precisa estar em
+        <b id="lembrete-ontem">—</b>, ou seja, o dia anterior a hoje (<span id="lembrete-hoje">—</span>).
+        Com a posição de hoje o fechamento do dia ainda não rodou e a lista vem incompleta.</p></div>
+  </div>
+
+  <div class="solta" id="solta">
+    <h3>Suba o detalhe da carteira do franqueado</h3>
+    <p>Arraste o arquivo aqui ou escolha no computador. Formatos: .csv (exportação padrão) ou .xlsx.</p>
+    <input type="file" id="arquivo" accept=".csv,.txt,.xlsx,.xls" class="oculto">
+    <button class="acao" id="btn-escolher">Escolher arquivo</button>
+    <button class="acao fantasma oculto" id="btn-trocar">Trocar arquivo</button>
+    <div class="colunas">Colunas esperadas: Cliente ID · Documento · Nome · Tipo Cliente · Status · Data Churn · Expiração Contrato · Ativação Contrato · Status Contrato · MRR</div>
+    <div id="status-arquivo" style="margin-top:12px;font-size:12.5px"></div>
+  </div>
+
+  <div id="radar-conteudo" class="oculto">
+    <div class="filtros" style="margin-top:18px">
+      <div class="pcampo claro"><label for="i-posicao">Data de posição do relatório</label><input type="date" id="i-posicao"></div>
+      <label class="chk"><input type="checkbox" id="f-ativo" checked> Ativo</label>
+      <label class="chk"><input type="checkbox" id="f-inad" checked> Suspenso por inadimplência</label>
+      <label class="chk"><input type="checkbox" id="f-susp"> Suspenso</label>
+      <label class="chk"><input type="checkbox" id="f-jachurn"> Incluir quem já está em churn</label>
+    </div>
+    <div class="kpis" id="radar-kpis"></div>
+    <h2 class="secao-tit">Churn previsto por mês</h2>
+    <div class="barras" id="radar-barras"></div>
+    <h2 class="secao-tit">Lista de contato proativo</h2>
+    <div class="filtros">
+      <input type="search" id="busca" placeholder="Buscar por nome, documento ou ID">
+      <select id="f-urgencia">
+        <option value="">Todas as urgências</option>
+        <option value="Vencido">Data já passou</option>
+        <option value="Crítico">Crítico — até 7 dias</option>
+        <option value="Alerta">Alerta — 8 a 15 dias</option>
+        <option value="Atenção">Atenção — 16 a 30 dias</option>
+        <option value="Monitorar">Monitorar — mais de 30 dias</option>
+      </select>
+      <select id="f-ordem">
+        <option value="prioridade">Ordenar por prioridade</option>
+        <option value="data">Data do churn</option>
+        <option value="mrr">MRR (maior primeiro)</option>
+        <option value="nome">Nome</option>
+      </select>
+      <button class="acao fantasma" id="btn-export">Baixar lista (CSV)</button>
+      <button class="acao fantasma" id="btn-usar-radar">Usar no plano do mês</button>
+    </div>
+    <div class="rolagem"><table id="t-radar"><thead><tr>
+      <th>Nome</th><th>Documento</th><th>ID</th><th>Tipo</th><th>Status contrato</th>
+      <th>MRR</th><th>Ativação</th><th>Expiração</th><th>Data do churn</th><th>Dias</th><th>Urgência</th>
+    </tr></thead><tbody></tbody></table></div>
+    <p class="aviso" id="radar-rodape" style="margin-top:10px"></p>
+  </div>
+</section>
+
+<footer>avec · Árvore de Alavancas — os dados ficam salvos apenas neste navegador. Use o botão Backup para guardar uma cópia.</footer>
+</div>
+
+<div id="dialogo" class="dlg-fundo oculto" role="dialog" aria-modal="true" aria-labelledby="dlg-tit">
+  <div class="dlg">
+    <h3 id="dlg-tit"></h3>
+    <p id="dlg-txt"></p>
+    <div class="dlg-acoes">
+      <button class="acao clara" id="dlg-nao">Cancelar</button>
+      <button class="acao remover" id="dlg-sim">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<script>
+/* ============================================================
+   1. ARMAZENAMENTO — sobrevive a fechar o navegador
+   ============================================================ */
+const CHAVE = 'avec_arvore_v2';
+const disco = (()=>{
+  let ok = true;
+  try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); }catch(e){ ok = false; }
+  const mem = {};
+  return {
+    get ok(){ return ok; },
+    ler(k){ try{ return ok ? localStorage.getItem(k) : (mem[k] ?? null); }catch(e){ return mem[k] ?? null; } },
+    escrever(k,v){ try{ if(ok) localStorage.setItem(k,v); else mem[k]=v; }catch(e){ ok=false; mem[k]=v; } },
+  };
+})();
+
+/* acento por nível — troca --accent e deriva --accent-soft, igual ao projeto original */
+const ACENTOS = { Bronze:'#9a5a2c', Prata:'#5f6b7a', Ouro:'#9d7710', Diamante:'#2e7c9b' };
+function hexAlpha(hex, a){
+  const h = hex.replace('#','');
+  const n = parseInt(h.length === 3 ? h.split('').map(c=>c+c).join('') : h, 16);
+  return `rgba(${(n>>16)&255}, ${(n>>8)&255}, ${n&255}, ${a})`;
+}
+function aplicarAcento(nivel){
+  const c = ACENTOS[nivel] || ACENTOS.Diamante;
+  const raiz = document.documentElement.style;
+  raiz.setProperty('--accent', c);
+  raiz.setProperty('--accent-soft', hexAlpha(c, .10));
+}
+
+/* Referência: valores de exemplo, carregados só se o franqueado pedir. */
+const NIVEIS_REF = {
+  Bronze:{nova:1000, exp:550, cancel:0.03}, Prata:{nova:2500, exp:1250, cancel:0.03},
+  Ouro:{nova:3500, exp:1800, cancel:0.03},  Diamante:{nova:5000, exp:2500, cancel:0.03},
+};
+const PREMISSAS_REF = {
+  mixProsp:0.75, mixTerceira:0, convPropFech:0.45, convVisitaProp:0.50,
+  convPropFechIn:0.45, convLeadProp:0.60, ticketNovos:207, pctEspontaneo:0.30,
+  ticketUpsell:100, convVisitaUpsell:0.25, downsell:-100,
+  visitasPreChurn:6, radarPreChurn:8, reversao:0.50, ticketCancel:207,
+};
+/* Fábrica: tudo zerado. Quem abre pela primeira vez começa com a folha em branco. */
+const NIVEIS = {
+  Bronze:{nova:0, exp:0, cancel:0}, Prata:{nova:0, exp:0, cancel:0},
+  Ouro:{nova:0, exp:0, cancel:0},   Diamante:{nova:0, exp:0, cancel:0},
+};
+const PREMISSAS_PADRAO = {
+  mixProsp:0, mixTerceira:0, convPropFech:0, convVisitaProp:0,
+  convPropFechIn:0, convLeadProp:0, ticketNovos:0, pctEspontaneo:0,
+  ticketUpsell:0, convVisitaUpsell:0, downsell:0,
+  visitasPreChurn:0, radarPreChurn:0, reversao:0, ticketCancel:0,
+};
+
+/* ---------- calendário ---------- */
+const hoje = new Date(); hoje.setHours(0,0,0,0);
+const ontem = new Date(hoje); ontem.setDate(ontem.getDate()-1);
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MES_CURTO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const chaveMes = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+const nomeMes = c => { const [a,m] = c.split('-'); return MESES[+m-1] + ' ' + a; };
+const nomeMesCurto = c => { const [a,m] = c.split('-'); return MES_CURTO[+m-1] + '/' + a.slice(2); };
+const mesVizinho = (c,n) => { const [a,m] = c.split('-').map(Number); const d = new Date(a, m-1+n, 1); return chaveMes(d); };
+
+function inicioSemana(d){ const x = new Date(d); x.setDate(x.getDate() - ((x.getDay()+6)%7)); x.setHours(0,0,0,0); return x; }
+function semanasDoMes(c){
+  const [a,m] = c.split('-').map(Number), fim = new Date(a,m,0);
+  const buckets = []; let atual = 0, ref = null;
+  for(let d = new Date(a,m-1,1); d <= fim; d.setDate(d.getDate()+1)){
+    const k = inicioSemana(d).getTime();
+    if(ref === null) ref = k;
+    if(k !== ref){ buckets.push(atual); atual = 0; ref = k; }
+    const w = d.getDay(); if(w >= 1 && w <= 5) atual++;
+  }
+  buckets.push(atual);
+  let b = buckets.filter(x => x > 0);
+  if(b.length > 5){ const extra = b.splice(5).reduce((x,y)=>x+y,0); b[4] += extra; }
+  while(b.length < 5) b.push(0);
+  return b;
+}
+const diasUteisDoMes = c => semanasDoMes(c).reduce((a,b)=>a+b,0);
+
+/* ---------- estado ---------- */
+let A = null;
+
+function mesNovo(chave, anterior){
+  const dias = semanasDoMes(chave);
+  const metas = anterior ? anterior.niveis : NIVEIS;
+  return {
+    chave,
+    nivel: anterior ? anterior.nivel : 'Bronze',
+    niveis: JSON.parse(JSON.stringify(metas)),
+    carteira: anterior ? fechamentoDoMes(anterior) : 0,
+    diasUteis: dias.reduce((a,b)=>a+b,0),
+    vendedores: anterior ? anterior.vendedores : 1,
+    p: Object.assign({}, anterior ? anterior.p : PREMISSAS_PADRAO),
+    diasSemana: dias,
+    semanasConcluidas: 0,
+    real: {}, acoes: [{},{},{}],
+    radar: null,
+    novo: true,
+    origem: anterior ? anterior.chave : null,
+  };
+}
+function estadoInicial(){
+  const c = chaveMes(hoje);
+  const a = { versao:2, franquia:'', niveis:JSON.parse(JSON.stringify(NIVEIS)), mesAtual:c, meses:{} };
+  a.meses[c] = mesNovo(c, null);
+  return a;
+}
+function carregar(){
+  try{
+    const bruto = disco.ler(CHAVE);
+    if(!bruto) return estadoInicial();
+    const a = JSON.parse(bruto);
+    if(!a || !a.meses || !Object.keys(a.meses).length) return estadoInicial();
+    a.niveis = a.niveis || JSON.parse(JSON.stringify(NIVEIS));
+    Object.values(a.meses).forEach(m=>{
+      if(!m.niveis) m.niveis = JSON.parse(JSON.stringify(a.niveis));
+    });
+    return a;
+  }catch(e){ return estadoInicial(); }
+}
+let salvarTimer = null;
+function salvar(){
+  clearTimeout(salvarTimer);
+  salvarTimer = setTimeout(()=>{
+    try{
+      disco.escrever(CHAVE, JSON.stringify(A));
+      const el = $('#salvo');
+      el.classList.toggle('erro', !disco.ok);
+      el.textContent = disco.ok ? 'Salvo automaticamente' : 'Sem memória neste navegador — use Backup';
+    }catch(e){ $('#salvo').classList.add('erro'); $('#salvo').textContent = 'Não consegui salvar — use Backup'; }
+  }, 250);
+}
+function salvarAgora(){
+  clearTimeout(salvarTimer);
+  try{ disco.escrever(CHAVE, JSON.stringify(A)); }catch(e){}
+}
+window.addEventListener('pagehide', salvarAgora);
+window.addEventListener('beforeunload', salvarAgora);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden') salvarAgora(); });
+const M = () => A.meses[A.mesAtual];
+
+/* ============================================================
+   2. CÁLCULO — mesmas fórmulas da planilha
+   ============================================================ */
+function calcularPlano(m){
+  const n = (m.niveis && m.niveis[m.nivel]) || A.niveis[m.nivel] || NIVEIS.Bronze, p = m.p, P = {};
+  P.newMrr = n.nova; P.expansion = n.exp; P.pctCancel = n.cancel;
+  P.churn = -n.cancel * m.carteira;
+  P.netNew = P.newMrr + P.expansion + P.churn;
+  P.carteiraFim = m.carteira + P.netNew;
+  P.crescimento = m.carteira ? P.netNew / m.carteira : 0;
+
+  P.fechProsp    = p.ticketNovos ? P.newMrr * p.mixProsp / p.ticketNovos : 0;
+  P.propProsp    = p.convPropFech ? P.fechProsp / p.convPropFech : 0;
+  P.reuniaoProsp = p.convVisitaProp ? P.propProsp / p.convVisitaProp : 0;
+  P.visitasDia   = (m.diasUteis * m.vendedores) ? P.reuniaoProsp / m.diasUteis / m.vendedores : 0;
+
+  P.fechIn  = p.ticketNovos ? P.newMrr * (1 - p.mixProsp - (p.mixTerceira||0)) / p.ticketNovos : 0;
+  P.propIn  = p.convPropFechIn ? P.fechIn / p.convPropFechIn : 0;
+  P.leadsIn = p.convLeadProp ? P.propIn / p.convLeadProp : 0;
+
+  P.upsell      = P.expansion - p.downsell;
+  P.vendasAdic  = p.ticketUpsell ? P.upsell * (1 - p.pctEspontaneo) / p.ticketUpsell : 0;
+  P.visitasBase = p.convVisitaUpsell ? P.vendasAdic / p.convVisitaUpsell : 0;
+  P.upsellPap   = P.upsell * (1 - p.pctEspontaneo);
+  P.upsellInvol = P.upsell * p.pctEspontaneo;
+  P.cancelamentos = p.ticketCancel ? -P.churn / p.ticketCancel : 0;
+  return P;
+}
+
+function linhasSemanais(m, P){
+  const p = m.p;
+  return [
+   {g:'1. Esforço — o que você controla. Discuta primeiro.'},
+   {k:'reunioes',    n:'Reunião novo cliente (PaP ou online)', plano:P.reuniaoProsp, dec:1},
+   {k:'leads',       n:'Leads inbound (#)',                    plano:P.leadsIn,      dec:1},
+   {k:'visPreChurn', n:'Visitas pré-churn (#)',                plano:p.visitasPreChurn, dec:1},
+   {k:'visBase',     n:'Visitas de base (#)',                  plano:P.visitasBase,  dec:1},
+   {g:'2. Funil — preencher por origem'},
+   {k:'propProsp',   n:'Propostas novo cliente prospecção',    plano:P.propProsp,    dec:1},
+   {k:'fechProsp',   n:'Fechamento novo cliente prospecção',   plano:P.fechProsp,    dec:1},
+   {k:'propIn',      n:'Propostas inbound (#)',                plano:P.propIn,       dec:1},
+   {k:'fechIn',      n:'Fechamentos inbound (#)',              plano:P.fechIn,       dec:1},
+   {k:'vendasAdic',  n:'Vendas adicionais — upsell (#)',       plano:P.vendasAdic,   dec:1},
+   {g:'3. Qualidade — conversões e tickets. Calculado; discuta desvios.'},
+   {k:'cVisProp',   n:'Conv. visita/reunião → proposta',       plano:p.convVisitaProp,  tipo:'pct', calc:r=>r.reunioes?r.propProsp/r.reunioes:null},
+   {k:'cPropFech',  n:'Conv. proposta → fechamento',           plano:p.convPropFech,    tipo:'pct', calc:r=>r.propProsp?r.fechProsp/r.propProsp:null},
+   {k:'cLeadProp',  n:'Conv. lead inbound → proposta',         plano:p.convLeadProp,    tipo:'pct', calc:r=>r.leads?r.propIn/r.leads:null},
+   {k:'cPropFechIn',n:'Conv. proposta inbound → fechamento',   plano:p.convPropFechIn,  tipo:'pct', calc:r=>r.propIn?r.fechIn/r.propIn:null},
+   {k:'cVisUp',     n:'Conv. visita de base → venda adicional',plano:p.convVisitaUpsell,tipo:'pct', calc:r=>r.visBase?r.vendasAdic/r.visBase:null},
+   {k:'tkNovos',    n:'Ticket médio — novos (R$)',             plano:p.ticketNovos,  tipo:'moeda', calc:r=>(r.fechProsp+r.fechIn)?r.newMrr/(r.fechProsp+r.fechIn):null},
+   {k:'tkUpsell',   n:'Ticket médio — upsell (R$)',            plano:p.ticketUpsell, tipo:'moeda', calc:r=>r.vendasAdic?r.upsellPap/r.vendasAdic:null},
+   {k:'tkCancel',   n:'Ticket médio — cancelados (R$)',        plano:p.ticketCancel, tipo:'moeda', calc:r=>r.cancelados?-r.churn/r.cancelados:null},
+   {g:'4. Resultado — consequência. Confira, não discuta.'},
+   {k:'newMrr',      n:'New MRR (R$)',                plano:P.newMrr,      tipo:'moeda'},
+   {k:'upsellPap',   n:'Upsell — PaP ou online (R$)', plano:P.upsellPap,   tipo:'moeda'},
+   {k:'upsellInvol', n:'Upsell — involuntário (R$)',  plano:P.upsellInvol, tipo:'moeda'},
+   {k:'downsell',    n:'Downsell (R$, negativo)',     plano:p.downsell,    tipo:'moeda', inverso:true},
+   {k:'expansion',   n:'Expansion (R$)',              plano:P.expansion,   tipo:'moeda', soma:['upsellPap','upsellInvol','downsell']},
+   {k:'cancelados',  n:'Clientes cancelados (#)',     plano:P.cancelamentos, dec:1, inverso:true},
+   {k:'churn',       n:'Churn MRR (R$, negativo)',    plano:P.churn,       tipo:'moeda', inverso:true},
+   {k:'netNew',      n:'NET NEW MRR (R$)',            plano:P.netNew,      tipo:'moeda', soma:['newMrr','expansion','churn']},
+  ];
+}
+
+function calcularSemanal(m, P){
+  const linhas = linhasSemanais(m, P);
+  const totDias = m.diasSemana.reduce((a,b)=>a+b,0);
+  const diasMTD = m.diasSemana.slice(0, m.semanasConcluidas).reduce((a,b)=>a+b,0);
+  const mapa = {}; linhas.forEach(l=>{ if(l.k) mapa[l.k] = l; });
+  const base = linhas.filter(l => l.k && !l.calc && !l.soma);
+  const somas = linhas.filter(l => l.soma);
+
+  const realSemana = w => {
+    const r = {};
+    base.forEach(l=>{ r[l.k] = num(m.real[l.k] ? m.real[l.k][w] : null); });
+    somas.forEach(l=>{ r[l.k] = l.soma.reduce((a,k)=>a+num(r[k]),0); });
+    return r;
+  };
+  const acumulado = {};
+  base.forEach(l=>{
+    let t = 0;
+    for(let w = 0; w < m.semanasConcluidas; w++){
+      const v = m.real[l.k] ? m.real[l.k][w] : null;
+      if(v != null && v !== '') t += Number(v);
+    }
+    acumulado[l.k] = t;
+  });
+  somas.forEach(l=>{ acumulado[l.k] = l.soma.reduce((a,k)=>a+num(acumulado[k]),0); });
+
+  linhas.forEach(l=>{
+    if(!l.k) return;
+    l.semanas = [];
+    for(let w = 0; w < 5; w++){
+      const plano = (l.calc || l.tipo === 'pct') ? l.plano : (totDias ? l.plano * m.diasSemana[w] / totDias : 0);
+      const rs = realSemana(w);
+      let real;
+      if(l.calc) real = l.calc(rs);
+      else if(l.soma) real = l.soma.some(k => m.real[k] && m.real[k][w] != null && m.real[k][w] !== '') ? rs[l.k] : null;
+      else { const v = m.real[l.k] ? m.real[l.k][w] : null; real = (v == null || v === '') ? null : Number(v); }
+      l.semanas.push({plano, real});
+    }
+    if(l.calc){
+      l.planoMTD = l.plano;
+      l.realMTD = l.calc(acumulado);
+      l.projecao = l.realMTD;
+    } else {
+      l.planoMTD = l.semanas.slice(0, m.semanasConcluidas).reduce((a,x)=>a+x.plano, 0);
+      const reais = l.semanas.slice(0, m.semanasConcluidas).map(x=>x.real);
+      l.realMTD = reais.some(v => v != null) ? reais.reduce((a,v)=>a+num(v), 0) : null;
+      l.projecao = (l.planoMTD && l.realMTD != null) ? l.realMTD / l.planoMTD * l.plano : null;
+    }
+    l.pct = (l.planoMTD && l.realMTD != null) ? l.realMTD / l.planoMTD : null;
+  });
+
+  const nn = mapa.netNew;
+  const temReal = Object.keys(m.real).some(k => (m.real[k]||[]).some(v => v != null && v !== ''));
+  const carteiraProj = (nn && nn.projecao != null) ? m.carteira + nn.projecao : m.carteira + P.netNew;
+  return {linhas, mapa, diasMTD, totDias, carteiraProj, temReal};
+}
+function fechamentoDoMes(m){
+  const P = calcularPlano(m);
+  return calcularSemanal(m, P).carteiraProj;
+}
+
+/* ============================================================
+   3. FORMATAÇÃO
+   ============================================================ */
+const num = v => (v == null || v === '' || isNaN(v)) ? 0 : Number(v);
+const brl = (v,d=0) => v == null || isNaN(v) ? '—' : (v<0?'−':'') + 'R$ ' + Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const dec = (v,d=1) => v == null || isNaN(v) ? '—' : Number(v).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct = (v,d=0) => v == null || isNaN(v) ? '—' : (v*100).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}) + '%';
+const fmtData = d => !d ? '—' : String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function fmtValor(l,v){
+  if(v == null) return '—';
+  if(l.tipo === 'moeda') return brl(v);
+  if(l.tipo === 'pct') return pct(v);
+  return dec(v, l.dec == null ? 1 : l.dec);
+}
+/* Confirmação desenhada na página: confirm()/alert() nativos são bloqueados
+   dentro de iframes com sandbox, e a resposta voltaria como "cancelar". */
+let dlgResolver = null;
+function fecharDlg(valor){
+  $('#dialogo').classList.add('oculto');
+  const r = dlgResolver; dlgResolver = null;
+  if(r) r(valor);
+}
+function perguntar(titulo, texto, rotuloSim, perigo){
+  return new Promise(res=>{
+    $('#dlg-tit').textContent = titulo;
+    $('#dlg-txt').textContent = texto;
+    const sim = $('#dlg-sim');
+    sim.textContent = rotuloSim || 'Confirmar';
+    sim.className = 'acao ' + (perigo === false ? '' : 'remover');
+    $('#dlg-nao').classList.remove('oculto');
+    $('#dialogo').classList.remove('oculto');
+    dlgResolver = res;
+    setTimeout(()=>sim.focus(), 20);
+  });
+}
+function avisar(titulo, texto){
+  return new Promise(res=>{
+    $('#dlg-tit').textContent = titulo;
+    $('#dlg-txt').textContent = texto;
+    const sim = $('#dlg-sim');
+    sim.textContent = 'Entendi'; sim.className = 'acao';
+    $('#dlg-nao').classList.add('oculto');
+    $('#dialogo').classList.remove('oculto');
+    dlgResolver = res;
+    setTimeout(()=>sim.focus(), 20);
+  });
+}
+document.addEventListener('DOMContentLoaded', ()=>{});
+let toastTimer;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('ver');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('ver'), 2200);
+}
+
+$('#dlg-sim').addEventListener('click', ()=>fecharDlg(true));
+$('#dlg-nao').addEventListener('click', ()=>fecharDlg(false));
+$('#dialogo').addEventListener('click', e=>{ if(e.target.id === 'dialogo') fecharDlg(false); });
+document.addEventListener('keydown', e=>{
+  if($('#dialogo').classList.contains('oculto')) return;
+  if(e.key === 'Escape') fecharDlg(false);
+  if(e.key === 'Enter') fecharDlg(true);
+});
+
+/* ============================================================
+   4. ABAS
+   ============================================================ */
+$$('nav.abas button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    $$('nav.abas button').forEach(x=>x.setAttribute('aria-selected','false'));
+    $$('.painel').forEach(p=>p.classList.remove('ativo'));
+    b.setAttribute('aria-selected','true');
+    $('#'+b.getAttribute('aria-controls')).classList.add('ativo');
+  });
+});
+
+/* ============================================================
+   5. NAVEGAÇÃO DE MESES
+   ============================================================ */
+function mesVazio(m){
+  if(!m || !m.novo) return false;
+  const semReal = !Object.keys(m.real||{}).some(k => (m.real[k]||[]).some(v => v != null && v !== ''));
+  const semAcao = !(m.acoes||[]).some(a => Object.values(a).some(v => v != null && v !== ''));
+  return semReal && semAcao && !m.radar;
+}
+function mesAnteriorSalvo(chave){
+  const anteriores = Object.keys(A.meses).filter(c => c < chave).sort();
+  return anteriores.length ? A.meses[anteriores[anteriores.length-1]] : null;
+}
+function irParaMes(chave){
+  // ao sair de um mês em que nada foi preenchido, ele não fica na lista.
+  // o mês corrente do calendário é sempre mantido.
+  const saindo = A.meses[A.mesAtual];
+  if(saindo && A.mesAtual !== chave && A.mesAtual !== chaveMes(hoje) && mesVazio(saindo)
+     && Object.keys(A.meses).length > 1){
+    delete A.meses[A.mesAtual];
+  }
+  const base = mesAnteriorSalvo(chave);
+  if(!A.meses[chave]){
+    A.meses[chave] = mesNovo(chave, base);
+    toast(base ? 'Mês novo criado a partir de ' + nomeMes(base.chave) : 'Mês novo criado');
+  } else {
+    // mês ainda sem nada preenchido: reaproveita o fechamento e as premissas do anterior,
+    // inclusive quando o mês anterior só foi criado depois deste.
+    const m = A.meses[chave];
+    const intocado = m.novo && !Object.keys(m.real).some(k => (m.real[k]||[]).some(v => v != null && v !== ''));
+    if(intocado && base && base.chave !== m.origem){
+      m.nivel = base.nivel; m.vendedores = base.vendedores;
+      m.p = Object.assign({}, base.p);
+      m.niveis = JSON.parse(JSON.stringify(base.niveis));
+      m.carteira = fechamentoDoMes(base);
+      m.origem = base.chave;
+    }
+  }
+  A.mesAtual = chave;
+  render();
+}
+$('#mes-ant').addEventListener('click', ()=>irParaMes(mesVizinho(A.mesAtual,-1)));
+$('#mes-prox').addEventListener('click', ()=>irParaMes(mesVizinho(A.mesAtual, 1)));
+$('#btn-escolher-mes').addEventListener('click', ()=>{
+  const el = $('#i-mes'); el.classList.remove('oculto'); el.value = A.mesAtual;
+  if(el.showPicker) { try{ el.showPicker(); }catch(e){} } else el.focus();
+});
+$('#i-mes').addEventListener('change', ()=>{ if($('#i-mes').value) irParaMes($('#i-mes').value); });
+$('#btn-apagar-mes').addEventListener('click', async ()=>{
+  if(Object.keys(A.meses).length <= 1){ toast('Este é o único mês salvo'); return; }
+  const ok = await perguntar('Apagar ' + nomeMes(A.mesAtual) + '?',
+    'Todos os dados deste mês serão apagados. Os outros meses continuam salvos.', 'Apagar mês');
+  if(!ok) return;
+  delete A.meses[A.mesAtual];
+  A.mesAtual = Object.keys(A.meses).sort().pop();
+  render(); toast('Mês apagado');
+});
+
+function renderMesbar(){
+  $('#mes-rotulo').textContent = nomeMes(A.mesAtual);
+  const chaves = Object.keys(A.meses).sort();
+  const podeRemover = chaves.length > 1;
+  $('#chips-meses').innerHTML = chaves.map(c =>
+    `<span class="chip" data-c="${c}" role="button" tabindex="0" aria-current="${c===A.mesAtual}">${nomeMesCurto(c)}`
+    + (podeRemover ? `<i class="x" data-x="${c}" role="button" tabindex="0" aria-label="Remover ${nomeMes(c)}" title="Remover ${nomeMes(c)}">×</i>` : '')
+    + `</span>`).join('');
+  $$('#chips-meses .chip').forEach(b=>{
+    b.addEventListener('click', e=>{ if(e.target.dataset.x) return; irParaMes(b.dataset.c); });
+    b.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); irParaMes(b.dataset.c); } });
+  });
+  $$('#chips-meses .x').forEach(x=>{
+    const remover = async e=>{
+      e.stopPropagation();
+      const c = x.dataset.x, alvo = A.meses[c];
+      if(!mesVazio(alvo)){
+        const ok = await perguntar('Remover ' + nomeMes(c) + '?',
+          'Este mês tem dados preenchidos e eles serão apagados.', 'Remover mês');
+        if(!ok) return;
+      }
+      delete A.meses[c];
+      if(A.mesAtual === c) A.mesAtual = Object.keys(A.meses).sort().pop();
+      render(); toast(nomeMes(c) + ' removido');
+    };
+    x.addEventListener('click', remover);
+    x.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); remover(e); } });
+  });
+  const m = M();
+  const semMetas = !Object.values(m.niveis).some(n => n.nova || n.exp || n.cancel);
+  const semPremissas = !Object.values(m.p).some(v => v);
+  $('#faixa-vazio').classList.toggle('oculto', !(semMetas && semPremissas));
+  const f = $('#faixa-novo');
+  if(m.novo && m.origem){
+    f.classList.remove('oculto');
+    $('#faixa-novo-tit').textContent = nomeMes(m.chave) + ' começa do zero';
+    $('#faixa-novo-txt').textContent = 'Os realizados estão zerados. Nível, premissas e vendedores vieram de ' + nomeMes(m.origem)
+      + ', e a carteira inicial (' + brl(m.carteira) + ') é o fechamento projetado daquele mês. ' + nomeMes(m.origem) + ' continua salvo e acessível pelos atalhos acima.';
+  } else f.classList.add('oculto');
+}
+
+/* ============================================================
+   6. CAMPOS
+   ============================================================ */
+const CAMPOS = [
+  ['#i-franquia','A.franquia','texto'], ['#i-nivel','m.nivel','texto'],
+  ['#i-carteira','m.carteira','numero'], ['#i-dias','m.diasUteis','numero'],
+  ['#i-vend','m.vendedores','numero'], ['#i-semanas','m.semanasConcluidas','numero'],
+  ['#i-mixProsp','p.mixProsp','pct'], ['#i-convPropFech','p.convPropFech','pct'],
+  ['#i-convVisitaProp','p.convVisitaProp','pct'], ['#i-convPropFechIn','p.convPropFechIn','pct'],
+  ['#i-convLeadProp','p.convLeadProp','pct'], ['#i-ticketNovos','p.ticketNovos','numero'],
+  ['#i-pctEspontaneo','p.pctEspontaneo','pct'], ['#i-ticketUpsell','p.ticketUpsell','numero'],
+  ['#i-convVisitaUpsell','p.convVisitaUpsell','pct'], ['#i-downsell','p.downsell','numero'],
+  ['#i-visitasPreChurn','p.visitasPreChurn','numero'], ['#i-radar','p.radarPreChurn','numero'],
+  ['#i-reversao','p.reversao','pct'], ['#i-ticketCancel','p.ticketCancel','numero'],
+];
+function preencherCampos(){
+  const m = M();
+  CAMPOS.forEach(([sel, cam, tipo])=>{
+    const el = $(sel); if(!el) return;
+    const [alvo, chave] = cam.split('.');
+    let v = alvo === 'A' ? A[chave] : alvo === 'p' ? m.p[chave] : m[chave];
+    el.value = tipo === 'pct' ? Math.round(v*10000)/100 : v;
+  });
+}
+CAMPOS.forEach(([sel, cam, tipo])=>{
+  const el = $(sel); if(!el) return;
+  el.addEventListener('input', ()=>{
+    let v = el.value;
+    if(tipo === 'numero') v = Number(v) || 0;
+    if(tipo === 'pct') v = (Number(v)||0)/100;
+    const [alvo, chave] = cam.split('.');
+    const m = M();
+    if(alvo === 'A') A[chave] = v; else if(alvo === 'p') m.p[chave] = v; else m[chave] = v;
+    if(cam !== 'A.franquia') m.novo = false;
+    render({manterFoco:sel});
+  });
+});
+$('#btn-limpar-real').addEventListener('click', async ()=>{
+  const ok = await perguntar('Limpar os realizados de ' + nomeMes(A.mesAtual) + '?',
+    'As colunas “Real” voltam a ficar vazias. O plano e as premissas continuam como estão.', 'Limpar realizados');
+  if(!ok) return;
+  M().real = {}; render(); toast('Realizados limpos');
+});
+
+/* ============================================================
+   7. PLANO DO MÊS
+   ============================================================ */
+function renderPlano(m, P){
+  $('#v-netnew').textContent = brl(P.netNew);
+  $('#v-carteirafim').textContent = brl(P.carteiraFim);
+  $('#v-cresc').textContent = pct(P.crescimento,1) + ' de crescimento';
+  $('#v-newmrr').textContent = brl(P.newMrr);
+  $('#v-expansion').textContent = brl(P.expansion);
+  $('#v-churn').textContent = brl(P.churn);
+  $('#v-churnpe').textContent = pct(P.pctCancel,1) + ' do nível × carteira';
+  $('#v-fechprosp').textContent = dec(P.fechProsp);
+  $('#v-propprosp').textContent = dec(P.propProsp);
+  $('#v-reuniao').textContent = dec(P.reuniaoProsp,0);
+  $('#v-visitasdia').textContent = dec(P.visitasDia);
+  $('#v-fechin').textContent = dec(P.fechIn);
+  $('#v-propin').textContent = dec(P.propIn);
+  $('#v-leadsin').textContent = dec(P.leadsIn);
+  $('#v-upsell').textContent = brl(P.upsell);
+  $('#v-vendasadic').textContent = dec(P.vendasAdic);
+  $('#v-visitasbase').textContent = dec(P.visitasBase,0);
+  $('#v-cancel').textContent = dec(P.cancelamentos);
+
+  const tb = $('#t-niveis tbody'); tb.innerHTML = '';
+  Object.entries(m.niveis).forEach(([nome,n])=>{
+    const tr = document.createElement('tr');
+    if(nome === m.nivel) tr.style.background = 'var(--accent-soft)';
+    const campo = (c, v, passo) => `<td><input class="edit meta-in" data-nivel="${nome}" data-campo="${c}" type="number" step="${passo}" value="${v}" style="width:104px"></td>`;
+    tr.innerHTML = `<td><b>${nome}</b>${nome === m.nivel ? ' <span class="tag u-atencao">nível do mês</span>' : ''}</td>`
+      + campo('nova', n.nova, 50) + campo('exp', n.exp, 50)
+      + campo('cancel', Math.round(n.cancel*10000)/100, 0.1);
+    tb.appendChild(tr);
+  });
+  $$('#t-niveis .meta-in').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const nivel = el.dataset.nivel, c = el.dataset.campo, mm = M();
+      const v = Number(el.value) || 0;
+      mm.niveis[nivel][c] = c === 'cancel' ? v/100 : v;
+      A.niveis = JSON.parse(JSON.stringify(mm.niveis));   // vira o padrão de um começo do zero
+      mm.novo = false;
+      render({manterFoco:`#t-niveis .meta-in[data-nivel="${nivel}"][data-campo="${c}"]`});
+    });
+  });
+
+  const marc = $('#marc-radar');
+  if(m.radar){
+    marc.classList.remove('oculto');
+    marc.textContent = m.radar.emRisco30 + ' em risco · ' + brl(m.radar.mrrRisco30) + ' · ' + m.radar.posicaoTexto;
+  } else marc.classList.add('oculto');
+}
+
+/* ============================================================
+   8. SEMANAL
+   ============================================================ */
+function renderSemanal(m, calc){
+  const th = $('#t-semanal thead'), tb = $('#t-semanal tbody');
+  let h = '<tr><th rowspan="2" style="min-width:270px">Indicador</th><th rowspan="2">Plano mês</th>';
+  for(let w = 0; w < 5; w++) h += `<th colspan="2">Semana ${w+1}</th>`;
+  h += '<th rowspan="2">Plano MTD</th><th rowspan="2">Real MTD</th><th rowspan="2">Projeção mês</th><th rowspan="2">% da meta</th></tr><tr>';
+  for(let w = 0; w < 5; w++) h += '<th>Plano</th><th>Real</th>';
+  h += '</tr><tr><td style="font-weight:600">Dias úteis na semana</td><td>' + calc.totDias + '</td>';
+  for(let w = 0; w < 5; w++) h += `<td colspan="2" style="text-align:center"><input class="edit dias" data-w="${w}" type="number" min="0" max="7" style="width:52px;text-align:center" value="${m.diasSemana[w]}"></td>`;
+  h += `<td>${calc.diasMTD}</td><td colspan="3"></td></tr>`;
+  th.innerHTML = h;
+
+  tb.innerHTML = '';
+  calc.linhas.forEach(l=>{
+    const tr = document.createElement('tr');
+    if(l.g){ tr.className = 'grupo'; tr.innerHTML = `<td colspan="16">${l.g}</td>`; tb.appendChild(tr); return; }
+    if(l.k === 'netNew') tr.className = 'total';
+    let c = `<td>${l.n}</td><td>${fmtValor(l,l.plano)}</td>`;
+    for(let w = 0; w < 5; w++){
+      const s = l.semanas[w];
+      c += `<td>${fmtValor(l,s.plano)}</td>`;
+      if(l.calc || l.soma) c += `<td style="color:var(--ink-2)">${s.real == null ? '—' : fmtValor(l,s.real)}</td>`;
+      else c += `<td><input class="edit real-in" data-k="${l.k}" data-w="${w}" type="number" step="any" style="width:66px" value="${(m.real[l.k] && m.real[l.k][w] != null) ? m.real[l.k][w] : ''}"></td>`;
+    }
+    const cls = l.pct == null ? 'pct-neutro' : (l.inverso ? (l.pct <= 1 ? 'pct-bom' : 'pct-ruim') : (l.pct >= 1 ? 'pct-bom' : 'pct-ruim'));
+    c += `<td>${fmtValor(l,l.planoMTD)}</td><td><b>${l.realMTD == null ? '—' : fmtValor(l,l.realMTD)}</b></td>`
+       + `<td>${l.projecao == null ? '—' : fmtValor(l,l.projecao)}</td><td class="${cls}">${l.pct == null ? '—' : pct(l.pct,0)}</td>`;
+    tr.innerHTML = c; tb.appendChild(tr);
+  });
+  const tr = document.createElement('tr'); tr.className = 'total';
+  tr.innerHTML = `<td>Carteira projetada fim do mês (R$)</td><td>${brl(m.carteira)}</td>`
+    + `<td colspan="10" style="color:var(--ink-2);text-align:left">Carteira inicial + projeção de net new no ritmo atual</td>`
+    + `<td colspan="4"><b>${brl(calc.carteiraProj)}</b></td>`;
+  tb.appendChild(tr);
+
+  $$('#t-semanal .real-in').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const k = el.dataset.k, w = +el.dataset.w, mm = M();
+      mm.real[k] = mm.real[k] || [null,null,null,null,null];
+      mm.real[k][w] = el.value === '' ? null : Number(el.value);
+      mm.novo = false;
+      render({manterFoco:`#t-semanal .real-in[data-k="${k}"][data-w="${w}"]`});
+    });
+  });
+  $$('#t-semanal .dias').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const w = +el.dataset.w, mm = M();
+      mm.diasSemana[w] = Number(el.value) || 0;
+      mm.diasUteis = mm.diasSemana.reduce((a,b)=>a+b,0);
+      render({manterFoco:`#t-semanal .dias[data-w="${w}"]`});
+    });
+  });
+}
+function renderAcoes(m){
+  const tb = $('#t-acoes tbody'); tb.innerHTML = '';
+  if(!m.acoes.length) m.acoes = [{},{},{}];
+  m.acoes.forEach((a,i)=>{
+    const tr = document.createElement('tr');
+    const campo = (c,ph) => `<td style="text-align:left"><input class="acao-in" data-i="${i}" data-c="${c}" type="text" placeholder="${ph}" value="${esc(a[c])}" style="width:100%;border:1px solid var(--line);border-radius:5px;padding:3px 6px;font-family:var(--fonte-texto)"></td>`;
+    tr.innerHTML = campo('estab','Estabelecimento') + campo('obs','O que foi observado') + campo('acao','Próximo passo') + campo('resp','Quem / quando')
+      + `<td><input class="edit acao-in" data-i="${i}" data-c="preco" type="number" step="0.01" value="${a.preco == null ? '' : a.preco}" style="width:92px"></td>`;
+    tb.appendChild(tr);
+  });
+  $('#acoes-total').textContent = brl(m.acoes.reduce((t,a)=>t+num(a.preco), 0), 2);
+  $$('#t-acoes .acao-in').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const a = M().acoes[+el.dataset.i];
+      a[el.dataset.c] = el.dataset.c === 'preco' ? (el.value === '' ? null : Number(el.value)) : el.value;
+      $('#acoes-total').textContent = brl(M().acoes.reduce((t,x)=>t+num(x.preco), 0), 2);
+      salvar();
+    });
+  });
+}
+$('#btn-referencia').addEventListener('click', ()=>{
+  const m = M();
+  m.p = Object.assign({}, PREMISSAS_REF);
+  m.niveis = JSON.parse(JSON.stringify(NIVEIS_REF));
+  m.novo = false;
+  render(); toast('Valores de referência carregados — ajuste o que for diferente na sua franquia');
+});
+$('#btn-add-acao').addEventListener('click', ()=>{ M().acoes.push({}); renderAcoes(M()); salvar(); });
+
+/* ============================================================
+   9. PLANO vs PROJEÇÃO
+   ============================================================ */
+function cartao(titulo, cor, plano, projecao, pctv, inverso, fmt){
+  const cls = pctv == null ? 'pct-neutro' : (inverso ? (pctv <= 1 ? 'pct-bom' : 'pct-ruim') : (pctv >= 1 ? 'pct-bom' : 'pct-ruim'));
+  return `<div class="cartao" style="border-top:3px solid ${cor}"><div class="cab">${titulo}</div>
+    <div class="linha"><span>Plano</span><b>${fmt(plano)}</b></div>
+    <div class="linha"><span>Projeção</span><b>${projecao == null ? '—' : fmt(projecao)}</b></div>
+    <div class="rodape ${cls}">${pctv == null ? 'sem realizado' : pct(pctv,0) + ' da meta'}</div></div>`;
+}
+function renderProjecao(m, calc, P){
+  const Mp = calc.mapa, fm = v=>brl(v), fn = v=>dec(v), fp = v=>pct(v);
+  const c = (k,t,cor,fmt) => { const l = Mp[k]; return l ? cartao(t,cor,l.plano,l.projecao,l.pct,l.inverso,fmt||fn) : ''; };
+  $('#proj-topo').innerHTML = `
+    <div class="cartao"><div class="cab" style="background:var(--ink)">CONTEXTO</div>
+      <div class="linha"><span>Franquia</span><b>${esc(A.franquia)||'—'}</b></div>
+      <div class="linha"><span>Mês</span><b>${nomeMes(m.chave)}</b></div>
+      <div class="linha"><span>Semanas concluídas</span><b>${m.semanasConcluidas}</b></div>
+      <div class="rodape" style="color:var(--ink-2)">${calc.diasMTD} de ${calc.totDias} dias úteis</div></div>
+    <div class="cartao"><div class="cab" style="background:var(--ink-3)">CARTEIRA FIM DO MÊS</div>
+      <div class="linha"><span>Plano</span><b>${brl(P.carteiraFim)}</b></div>
+      <div class="linha"><span>Projeção</span><b>${brl(calc.carteiraProj)}</b></div>
+      <div class="rodape ${calc.carteiraProj >= P.carteiraFim ? 'pct-bom' : 'pct-ruim'}">${pct(m.carteira ? calc.carteiraProj/m.carteira-1 : 0, 1)} vs carteira inicial</div></div>`;
+  $('#proj-res').innerHTML = c('netNew','NET NEW MRR','var(--ink)',fm) + c('newMrr','NEW MRR','var(--accent)',fm)
+    + c('expansion','EXPANSION','var(--ok)',fm) + c('churn','CHURN (R$)','var(--bad)',fm)
+    + c('downsell','DOWNSELL (R$)','var(--ok)',fm) + c('cancelados','CANCELAMENTOS (#)','var(--ink-3)',fn);
+  $('#proj-funil').innerHTML = c('fechProsp','FECHAMENTOS PROSPECÇÃO','var(--ink-3)',fn) + c('propProsp','PROPOSTAS PROSPECÇÃO','var(--ink-3)',fn)
+    + c('reunioes','REUNIÕES PROSPECÇÃO','var(--accent)',fn) + c('fechIn','FECHAMENTO INBOUND','var(--ink-3)',fn)
+    + c('propIn','PROPOSTAS INBOUND','var(--ink-3)',fn) + c('leads','LEADS INBOUND (#)','var(--accent)',fn)
+    + c('vendasAdic','VENDAS ADICIONAIS (#)','var(--ok)',fn) + c('visBase','VISITAS DE BASE','var(--accent)',fn)
+    + c('visPreChurn','VISITAS PRÉ-CHURN','var(--accent)',fn);
+  $('#proj-qual').innerHTML = c('tkNovos','TICKET — NOVOS','var(--accent)',fm) + c('tkUpsell','TICKET — UPSELL','var(--ok)',fm)
+    + c('tkCancel','TICKET — CANCELADOS','var(--accent)',fm) + c('cVisProp','CONV. VISITA → PROPOSTA','var(--accent)',fp)
+    + c('cPropFech','CONV. PROPOSTA → FECHAMENTO','var(--ink-3)',fp) + c('cLeadProp','CONV. LEAD → PROPOSTA','var(--accent)',fp)
+    + c('cPropFechIn','CONV. PROPOSTA INBOUND → FECHAMENTO','var(--ink-3)',fp) + c('cVisUp','CONV. VISITA BASE → UPSELL','var(--ok)',fp);
+}
+
+/* ============================================================
+   10. DASHBOARD
+   ============================================================ */
+const CONSELHOS = {
+  reunioes:'Poucas reuniões na agenda. O topo do funil está curto — sem porta batida não há proposta.',
+  cVisProp:'As reuniões acontecem, mas viram poucas propostas. Revise a qualificação antes de marcar e a oferta na visita.',
+  cPropFech:'As propostas não fecham. Trabalhe objeções, prazo de resposta e follow-up.',
+  tkNovos:'Está fechando abaixo do ticket planejado. Cada venda entrega menos MRR — atenção ao desconto.',
+  leads:'Volume de leads inbound abaixo do plano. Cobre geração: indicação, redes e base.',
+  cLeadProp:'Chegam leads, mas viram poucas propostas. Acelere o tempo de resposta.',
+  cPropFechIn:'Proposta inbound não converte. O lead chega quente e esfria no meio do caminho.',
+  visBase:'Poucas visitas de base. Sem visita não existe upsell.',
+  cVisUp:'Você visita a base mas não gera venda adicional. Leve oferta pronta para a visita.',
+  tkUpsell:'Ticket de upsell abaixo do plano. Ofereça o módulo de maior valor primeiro.',
+  visPreChurn:'Poucas visitas pré-churn. A retenção está sem esforço dedicado — use o radar.',
+  cancelados:'Cancelamentos acima do orçado. Puxe a lista do radar e faça contato antes da data.',
+  tkCancel:'Está perdendo clientes de ticket maior que o previsto.',
+};
+const CORRENTES = [
+  {t:'Prospecção', cor:'var(--accent)', elos:[['reunioes','Reuniões'],['cVisProp','Visita → proposta'],['cPropFech','Proposta → fechamento'],['tkNovos','Ticket novos']]},
+  {t:'Inbound', cor:'var(--accent)', elos:[['leads','Leads'],['cLeadProp','Lead → proposta'],['cPropFechIn','Proposta → fechamento'],['tkNovos','Ticket novos']]},
+  {t:'Base e upsell', cor:'var(--ok)', elos:[['visBase','Visitas de base'],['cVisUp','Visita → upsell'],['vendasAdic','Vendas adicionais'],['tkUpsell','Ticket upsell']]},
+  {t:'Retenção', cor:'var(--bad)', elos:[['visPreChurn','Visitas pré-churn'],['cancelados','Cancelamentos'],['tkCancel','Ticket cancelados']]},
+];
+
+function renderDashboard(m, calc, P){
+  const Mp = calc.mapa, nn = Mp.netNew;
+  const ritmo = nn.pct;
+  const classe = ritmo == null ? '' : ritmo >= 1 ? 'bom' : ritmo >= 0.85 ? 'medio' : 'ruim';
+  let titulo, texto;
+  if(!calc.temReal || !m.semanasConcluidas){
+    titulo = 'Nenhum resultado lançado ainda';
+    texto = 'Marque as semanas concluídas e preencha a coluna “Real” na aba Semanal. O dashboard passa a mostrar ritmo, projeção e o elo mais fraco da árvore.';
+  } else if(ritmo == null){
+    titulo = 'Aguardando os primeiros números';
+    texto = 'Faltam realizados nas semanas já concluídas.';
+  } else {
+    const projMeta = nn.plano ? nn.projecao / nn.plano : null;
+    titulo = ritmo >= 1 ? 'No ritmo do plano' : ritmo >= 0.85 ? 'Levemente atrás do plano' : 'Atrás do plano';
+    texto = `Depois de ${calc.diasMTD} de ${calc.totDias} dias úteis, o net new realizado é ${brl(nn.realMTD)} contra ${brl(nn.planoMTD)} previstos até aqui `
+      + `(${pct(ritmo,0)}). Mantido este ritmo, o mês fecha em ${brl(nn.projecao)} — ${pct(projMeta,0)} da meta de ${brl(nn.plano)}.`;
+  }
+  $('#dash-veredito').innerHTML = `<div class="veredito ${classe}"><h2>${titulo}</h2><p>${texto}</p>`
+    + (ritmo == null ? '' : `<div class="barra-ritmo"><i style="width:${Math.max(2, Math.min(100, ritmo*100))}%"></i></div>`) + `</div>`;
+
+  const kpi = (rot, val, pe, cls) => `<div class="kpi ${cls||''}"><div class="rot">${rot}</div><div class="val">${val}</div><div class="pe">${pe}</div></div>`;
+  const rot = l => l.pct == null ? 'sem realizado' : pct(l.pct,0) + ' do plano até aqui';
+  $('#dash-kpis').innerHTML =
+      kpi('Net new MRR — projeção', brl(nn.projecao == null ? P.netNew : nn.projecao), 'meta ' + brl(nn.plano), ritmo == null ? '' : ritmo >= 1 ? 'ok' : 'risco')
+    + kpi('Carteira projetada', brl(calc.carteiraProj), 'início ' + brl(m.carteira))
+    + kpi('New MRR', brl(Mp.newMrr.realMTD == null ? 0 : Mp.newMrr.realMTD), rot(Mp.newMrr))
+    + kpi('Expansion', brl(Mp.expansion.realMTD == null ? 0 : Mp.expansion.realMTD), rot(Mp.expansion))
+    + kpi('Churn', brl(Mp.churn.realMTD == null ? 0 : Mp.churn.realMTD), Mp.churn.pct == null ? 'sem realizado' : pct(Mp.churn.pct,0) + ' do orçado', Mp.churn.pct != null && Mp.churn.pct > 1 ? 'risco' : 'ok')
+    + kpi('Clientes em risco', m.radar ? m.radar.emRisco30 : '—', m.radar ? brl(m.radar.mrrRisco30) + ' · ' + m.radar.posicaoTexto : 'suba a carteira no radar', 'alerta')
+    + kpi('Dias úteis', calc.diasMTD + ' / ' + calc.totDias, m.semanasConcluidas + ' de 5 semanas fechadas');
+
+  $('#dash-diags').innerHTML = CORRENTES.map(cor=>{
+    const elos = cor.elos.map(([k,nome])=>{
+      const l = Mp[k]; if(!l) return null;
+      let r = l.pct;
+      if(l.inverso && r != null) r = r === 0 ? 2 : 1/r;  // menos cancelamento = melhor
+      return {k, nome, r, texto:l.pct == null ? '—' : pct(l.pct,0)};
+    }).filter(Boolean);
+    const comDado = elos.filter(e => e.r != null);
+    const fraco = comDado.length ? comDado.reduce((a,b)=> a.r <= b.r ? a : b) : null;
+    const media = comDado.length ? comDado.reduce((t,e)=>t+e.r, 0)/comDado.length : null;
+    const linhas = elos.map(e=>{
+      const larg = e.r == null ? 0 : Math.max(2, Math.min(100, e.r*100));
+      return `<div class="elo ${fraco && e.k === fraco.k ? 'fraco' : ''}"><span>${e.nome}</span>
+        <div class="trilho"><i style="width:${larg}%"></i></div><span style="text-align:right">${e.texto}</span></div>`;
+    }).join('');
+    const conselho = fraco ? (CONSELHOS[fraco.k] || 'Revise este elo com o vendedor.') : 'Sem realizado lançado nesta corrente.';
+    const clsMedia = media == null ? '' : media >= 1 ? 'pct-bom' : media >= .85 ? '' : 'pct-ruim';
+    return `<div class="diag" style="border-top:3px solid ${cor.cor}"><div class="cab"><span>${cor.t}</span><b class="${clsMedia}">${media == null ? '—' : pct(media,0)}</b></div>
+      <div class="corpo"><div class="elos">${linhas}</div><div class="conselho">${conselho}</div></div></div>`;
+  }).join('');
+
+  const funil = [['reunioes','Reuniões'],['propProsp','Propostas prosp.'],['fechProsp','Fech. prosp.'],
+    ['leads','Leads inbound'],['propIn','Propostas inb.'],['fechIn','Fech. inbound'],
+    ['visBase','Visitas de base'],['vendasAdic','Vendas adicionais'],['visPreChurn','Visitas pré-churn']];
+  $('#dash-funil').innerHTML = graficoDuplo(funil.map(([k,n])=>({
+    rot:n, a:Mp[k].planoMTD || 0, b:Mp[k].realMTD == null ? 0 : Mp[k].realMTD
+  })), 'Plano até aqui', 'Realizado', 'var(--line)', 'var(--accent)');
+
+  const chaves = Object.keys(A.meses).sort();
+  const hist = chaves.map(c=>{
+    const mm = A.meses[c], PP = calcularPlano(mm), cc = calcularSemanal(mm, PP);
+    const real = cc.mapa.netNew.realMTD;
+    return {chave:c, rot:nomeMesCurto(c), plano:PP.netNew, real:cc.mapa.netNew.projecao == null ? null : cc.mapa.netNew.projecao,
+      realMTD:real, carteiraIni:mm.carteira, carteiraFim:cc.carteiraProj, P:PP, calc:cc, m:mm};
+  });
+  $('#dash-hist-netnew').innerHTML = '<div style="font-family:var(--fonte-titulo);font-weight:700;font-size:11.5px;color:var(--ink-3);margin-bottom:8px">Net new MRR — meta vs projeção</div>'
+    + graficoDuplo(hist.map(h=>({rot:h.rot, a:h.plano, b:h.real == null ? 0 : h.real})), 'Meta', 'Projeção', 'var(--line)', 'var(--accent)');
+  $('#dash-hist-carteira').innerHTML = '<div style="font-family:var(--fonte-titulo);font-weight:700;font-size:11.5px;color:var(--ink-3);margin-bottom:8px">Carteira — fechamento projetado</div>'
+    + graficoLinha(hist.map(h=>({rot:h.rot, v:h.carteiraFim})));
+
+  $('#t-hist tbody').innerHTML = hist.map(h=>{
+    const p = h.plano ? (h.real == null ? null : h.real/h.plano) : null;
+    const cls = p == null ? 'pct-neutro' : p >= 1 ? 'pct-bom' : 'pct-ruim';
+    const atual = h.chave === A.mesAtual;
+    return `<tr${atual ? ' style="background:var(--accent-soft)"' : ''}>
+      <td><b>${nomeMes(h.chave)}</b>${atual ? ' ·' : ''}</td><td>${brl(h.carteiraIni)}</td>
+      <td>${brl(h.calc.mapa.newMrr.projecao == null ? h.P.newMrr : h.calc.mapa.newMrr.projecao)}</td>
+      <td>${brl(h.calc.mapa.expansion.projecao == null ? h.P.expansion : h.calc.mapa.expansion.projecao)}</td>
+      <td>${brl(h.calc.mapa.churn.projecao == null ? h.P.churn : h.calc.mapa.churn.projecao)}</td>
+      <td><b>${brl(h.real == null ? h.plano : h.real)}</b></td>
+      <td class="${cls}">${p == null ? '—' : pct(p,0)}</td><td>${brl(h.carteiraFim)}</td></tr>`;
+  }).join('');
+}
+
+/* ---------- gráficos SVG ---------- */
+function graficoDuplo(dados, rotA, rotB, corA, corB){
+  if(!dados.length) return '<p class="vazio-msg">Sem dados.</p>';
+  const L = 60, larg = 720, alt = 42 + dados.length * 30;
+  const max = Math.max(1, ...dados.map(d => Math.max(Math.abs(d.a), Math.abs(d.b))));
+  const escala = v => Math.max(0, Math.abs(v)) / max * (larg - L - 92);
+  const barras = dados.map((d,i)=>{
+    const y = 16 + i*30;
+    return `<text x="${L-8}" y="${y+13}" text-anchor="end" font-size="11" fill="var(--ink-2)">${esc(d.rot)}</text>
+      <rect x="${L}" y="${y}" width="${escala(d.a)}" height="9" rx="3" fill="${corA}"></rect>
+      <rect x="${L}" y="${y+11}" width="${escala(d.b)}" height="9" rx="3" fill="${corB}"></rect>
+      <text x="${L + Math.max(escala(d.a), escala(d.b)) + 7}" y="${y+15}" font-size="10.5" fill="var(--ink-2)">${dec(d.b,1)} / ${dec(d.a,1)}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${larg} ${alt}" role="img">${barras}</svg>
+    <div class="legenda-graf"><span><i style="background:${corA}"></i>${rotA}</span><span><i style="background:${corB}"></i>${rotB}</span></div>`;
+}
+function graficoLinha(dados){
+  if(!dados.length) return '<p class="vazio-msg">Sem dados.</p>';
+  const larg = 720, alt = 220, ml = 78, mb = 28, mt = 12, mr = 14;
+  const vs = dados.map(d=>d.v);
+  const max = Math.max(...vs) * 1.08, min = Math.min(...vs, 0) * 0.98;
+  const x = i => ml + (dados.length === 1 ? (larg-ml-mr)/2 : i * (larg-ml-mr)/(dados.length-1));
+  const y = v => mt + (1 - (v-min)/((max-min)||1)) * (alt-mt-mb);
+  const pontos = dados.map((d,i)=>`${x(i)},${y(d.v)}`).join(' ');
+  const area = `${ml},${alt-mb} ${pontos} ${x(dados.length-1)},${alt-mb}`;
+  const grade = [0,0.5,1].map(f=>{
+    const v = min + (max-min)*f;
+    return `<line x1="${ml}" x2="${larg-mr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"></line>
+      <text x="${ml-8}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--ink-2)">${brl(v)}</text>`;
+  }).join('');
+  const marcas = dados.map((d,i)=>`<circle cx="${x(i)}" cy="${y(d.v)}" r="4" fill="var(--accent)"></circle>
+    <text x="${x(i)}" y="${alt-9}" text-anchor="middle" font-size="10.5" fill="var(--ink-2)">${esc(d.rot)}</text>`).join('');
+  return `<svg viewBox="0 0 ${larg} ${alt}" role="img">${grade}
+    <polygon points="${area}" fill="var(--accent-soft)"></polygon>
+    <polyline points="${pontos}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"></polyline>
+    ${marcas}</svg>`;
+}
+
+/* ============================================================
+   11. RENDER GERAL
+   ============================================================ */
+function render(opc){
+  const m = M(), P = calcularPlano(m), calc = calcularSemanal(m, P);
+  aplicarAcento(m.nivel);
+  renderMesbar();
+  if(!opc || !opc.manterFoco) preencherCampos();
+  else CAMPOS.forEach(([sel])=>{ if(sel !== opc.manterFoco) { /* mantém o que o usuário digita */ } });
+  renderPlano(m, P);
+  renderSemanal(m, calc);
+  renderProjecao(m, calc, P);
+  renderDashboard(m, calc, P);
+  renderAcoes(m);
+  renderRadarPainel(m);
+  $('#capa-mes').textContent = nomeMes(m.chave);
+  $('#capa-franquia').textContent = A.franquia || '';
+  $('#capa-data').textContent = 'Gerado em ' + fmtData(new Date());
+  salvar();
+  if(opc && opc.manterFoco){ const el = $(opc.manterFoco); if(el) el.focus(); }
+}
+
+/* ============================================================
+   12. RADAR PRÉ-CHURN
+   ============================================================ */
+$('#lembrete-ontem').textContent = fmtData(ontem);
+$('#lembrete-hoje').textContent = fmtData(hoje);
+$('#i-posicao').value = ontem.toISOString().slice(0,10);
+const R = { linhas:[], posicao:new Date(ontem) };
+const norm = s => String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+
+function detectarSep(txt){
+  const l = txt.split(/\r?\n/)[0] || '';
+  const c = (l.match(/,/g)||[]).length, p = (l.match(/;/g)||[]).length, t = (l.match(/\t/g)||[]).length;
+  if(t > c && t > p) return '\t';
+  return p > c ? ';' : ',';
+}
+function lerCSV(txt){
+  if(txt.charCodeAt(0) === 0xFEFF) txt = txt.slice(1);
+  const sep = detectarSep(txt), linhas = [];
+  let linha = [], campo = '', aspas = false;
+  for(let i = 0; i < txt.length; i++){
+    const ch = txt[i];
+    if(aspas){
+      if(ch === '"'){ if(txt[i+1] === '"'){ campo += '"'; i++; } else aspas = false; }
+      else campo += ch;
+    } else if(ch === '"') aspas = true;
+    else if(ch === sep){ linha.push(campo); campo = ''; }
+    else if(ch === '\n'){ linha.push(campo); linhas.push(linha); linha = []; campo = ''; }
+    else if(ch !== '\r') campo += ch;
+  }
+  if(campo !== '' || linha.length){ linha.push(campo); linhas.push(linha); }
+  return linhas.filter(l => l.some(c => String(c).trim() !== ''));
+}
+function paraNumero(s){
+  if(s == null) return 0;
+  if(typeof s === 'number') return s;
+  let t = String(s).trim().replace(/R\$/gi,'').replace(/\s/g,'');
+  if(!t) return 0;
+  if(t.includes(',')) t = t.replace(/\./g,'').replace(',','.');
+  const v = parseFloat(t); return isNaN(v) ? 0 : v;
+}
+function paraData(s){
+  if(!s) return null;
+  if(s instanceof Date) return isNaN(s) ? null : s;
+  const t = String(s).trim();
+  let m = t.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m) return new Date(+m[3], +m[2]-1, +m[1]);
+  m = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return new Date(+m[1], +m[2]-1, +m[3]);
+  return null;
+}
+function fmtDoc(d){
+  const s = String(d == null ? '' : d).replace(/\D/g,'');
+  if(s.length === 11) return s.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  if(s.length === 14) return s.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
+  return d || '—';
+}
+const acharCol = (heads, alvos) => {
+  for(const a of alvos){ const i = heads.findIndex(h => h === a || h.startsWith(a)); if(i >= 0) return i; }
+  return -1;
+};
+function statusArquivo(html, erro){
+  const el = $('#status-arquivo');
+  el.innerHTML = html;
+  el.style.color = erro ? 'var(--bad)' : 'var(--ok)';
+}
+function processar(matriz, nomeArquivo){
+  if(matriz.length < 2){ statusArquivo('Não encontrei linhas de dados no arquivo.', true); return; }
+  const heads = matriz[0].map(norm);
+  const col = {
+    id:acharCol(heads,['clienteid','idcliente','id']), doc:acharCol(heads,['documento','cpfcnpj','cnpj']),
+    nome:acharCol(heads,['nome','razaosocial','cliente']), tipo:acharCol(heads,['tipocliente','tipo']),
+    status:acharCol(heads,['status']), dataChurn:acharCol(heads,['datachurn']),
+    expira:acharCol(heads,['expiracaocontrato','expiracao','vencimentocontrato']),
+    ativacao:acharCol(heads,['ativacaocontrato','ativacao']),
+    statusContrato:acharCol(heads,['statuscontrato','situacaocontrato']), mrr:acharCol(heads,['mrr']),
+  };
+  if(col.statusContrato < 0 || col.nome < 0){
+    statusArquivo('Não localizei as colunas “Nome” e “Status Contrato”. Confira se o arquivo é o detalhe de receita SaaS da carteira.', true);
+    return;
+  }
+  R.linhas = matriz.slice(1).map(l=>{
+    const g = i => i >= 0 ? l[i] : '';
+    const dChurn = paraData(g(col.dataChurn)), dExp = paraData(g(col.expira));
+    let previsto = dChurn, derivada = false;
+    if(!previsto && dExp){ previsto = new Date(dExp); previsto.setDate(previsto.getDate()+30); derivada = true; }
+    return {
+      id:String(g(col.id)||'').trim(), doc:String(g(col.doc)||'').trim(), nome:String(g(col.nome)||'').trim(),
+      tipo:String(g(col.tipo)||'').trim(), status:String(g(col.status)||'').trim().toUpperCase(),
+      statusContrato:String(g(col.statusContrato)||'').trim().toUpperCase(), scNorm:norm(g(col.statusContrato)),
+      mrr:paraNumero(g(col.mrr)), ativacao:paraData(g(col.ativacao)), expira:dExp, churn:previsto, derivada,
+    };
+  }).filter(r => r.nome);
+
+  $('#radar-conteudo').classList.remove('oculto');
+  $('#btn-trocar').classList.remove('oculto');
+  $('#btn-escolher').classList.add('oculto');
+  const vigentes = R.linhas.filter(r => ['ativo','suspensoporinadimplencia','suspenso'].includes(r.scNorm)).length;
+  statusArquivo(`<b>${esc(nomeArquivo)}</b> — ${R.linhas.length.toLocaleString('pt-BR')} clientes lidos, ${vigentes.toLocaleString('pt-BR')} com contrato vigente.`, false);
+  const md = String(nomeArquivo).match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(md){
+    const d = new Date(+md[1], +md[2]-1, +md[3]); d.setHours(0,0,0,0);
+    const dias = Math.round((hoje - d)/86400000);
+    if(dias > 1) $('#status-arquivo').innerHTML += `<br><span style="color:var(--warn)">Atenção: arquivo gerado em ${fmtData(d)}, há ${dias} dias. Gere uma exportação nova com a data de posição de ${fmtData(ontem)}.</span>`;
+  }
+  renderRadar(nomeArquivo);
+}
+const solta = $('#solta'), inputArq = $('#arquivo');
+$('#btn-escolher').addEventListener('click', ()=>inputArq.click());
+$('#btn-trocar').addEventListener('click', ()=>inputArq.click());
+inputArq.addEventListener('change', e=>{ if(e.target.files[0]) carregarArq(e.target.files[0]); });
+['dragenter','dragover'].forEach(ev=>solta.addEventListener(ev, e=>{ e.preventDefault(); solta.classList.add('sobre'); }));
+['dragleave','drop'].forEach(ev=>solta.addEventListener(ev, e=>{ e.preventDefault(); solta.classList.remove('sobre'); }));
+solta.addEventListener('drop', e=>{ const f = e.dataTransfer.files[0]; if(f) carregarArq(f); });
+
+function carregarArq(file){
+  const el = $('#status-arquivo');
+  el.textContent = 'Lendo ' + file.name + '…'; el.style.color = 'var(--ink-2)';
+  const ext = file.name.split('.').pop().toLowerCase();
+  const fr = new FileReader();
+  if(ext === 'xlsx' || ext === 'xls'){
+    if(typeof XLSX === 'undefined'){ statusArquivo('Não consegui carregar o leitor de Excel. Exporte o relatório em .csv.', true); return; }
+    fr.onload = ev => { try{
+      const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array', cellDates:true});
+      processar(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true, defval:''}), file.name);
+    }catch(err){ statusArquivo('Não consegui ler este arquivo: ' + err.message, true); } };
+    fr.readAsArrayBuffer(file);
+  } else {
+    fr.onload = ev => { try{ processar(lerCSV(ev.target.result), file.name); }
+      catch(err){ statusArquivo('Não consegui ler este arquivo: ' + err.message, true); } };
+    fr.readAsText(file, 'UTF-8');
+  }
+}
+$('#i-posicao').addEventListener('change', ()=>{
+  const v = $('#i-posicao').value;
+  if(v){ const [a,m,d] = v.split('-'); R.posicao = new Date(+a, +m-1, +d); }
+  renderRadar();
+});
+['#f-ativo','#f-inad','#f-susp','#f-jachurn','#busca','#f-urgencia','#f-ordem'].forEach(s=>{
+  $(s).addEventListener('input', ()=>renderRadar());
+  $(s).addEventListener('change', ()=>renderRadar());
+});
+function urgencia(dias){
+  if(dias == null) return {rot:'Sem data', cls:'u-monitorar'};
+  if(dias < 0)   return {rot:'Vencido',  cls:'u-vencido'};
+  if(dias <= 7)  return {rot:'Crítico',  cls:'u-critico'};
+  if(dias <= 15) return {rot:'Alerta',   cls:'u-alerta'};
+  if(dias <= 30) return {rot:'Atenção',  cls:'u-atencao'};
+  return {rot:'Monitorar', cls:'u-monitorar'};
+}
+function tagStatus(sc, scNorm){
+  const cls = scNorm === 'suspensoporinadimplencia' ? 't-inad' : scNorm === 'ativo' ? 't-ativo' : scNorm === 'suspenso' ? 't-susp' : 't-churn';
+  return `<span class="tag ${cls}">${esc(sc)||'—'}</span>`;
+}
+function filtrar(){
+  const alvos = [];
+  if($('#f-ativo').checked) alvos.push('ativo');
+  if($('#f-inad').checked)  alvos.push('suspensoporinadimplencia');
+  if($('#f-susp').checked)  alvos.push('suspenso');
+  const incluirChurn = $('#f-jachurn').checked;
+  return R.linhas.filter(r => alvos.includes(r.scNorm) && (incluirChurn || r.status !== 'CHURN'))
+    .map(r => Object.assign({}, r, (()=>{
+      const dias = r.churn ? Math.round((r.churn - R.posicao)/86400000) : null;
+      return {dias, urg:urgencia(dias)};
+    })()));
+}
+function combina(r, termo){
+  if(!termo) return true;
+  if(norm(r.nome).includes(termo)) return true;
+  if(String(r.id).includes(termo)) return true;
+  const digitos = termo.replace(/\D/g,'');
+  return digitos.length >= 3 && String(r.doc).replace(/\D/g,'').includes(digitos);
+}
+function listaFiltrada(){
+  const termo = norm($('#busca').value), urgSel = $('#f-urgencia').value, modo = $('#f-ordem').value;
+  const arr = filtrar().filter(r => (!urgSel || r.urg.rot === urgSel) && combina(r, termo));
+  const peso = r => r.scNorm === 'suspensoporinadimplencia' ? 0 : r.scNorm === 'suspenso' ? 1 : 2;
+  if(modo === 'data') arr.sort((a,b)=>(a.dias == null ? 1e9 : a.dias) - (b.dias == null ? 1e9 : b.dias));
+  else if(modo === 'mrr') arr.sort((a,b)=>b.mrr - a.mrr);
+  else if(modo === 'nome') arr.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  else arr.sort((a,b)=> peso(a)-peso(b) || ((a.dias == null ? 1e9 : a.dias) - (b.dias == null ? 1e9 : b.dias)) || b.mrr - a.mrr);
+  return arr;
+}
+function renderRadar(nomeArquivo){
+  if(!R.linhas.length) return;
+  const base = filtrar(), lista = listaFiltrada();
+  const inad = base.filter(r => r.scNorm === 'suspensoporinadimplencia');
+  const em30 = base.filter(r => r.dias != null && r.dias <= 30);
+  const mrr30 = em30.reduce((t,r)=>t+r.mrr, 0);
+
+  const m = M();
+  m.radar = {
+    arquivo: nomeArquivo || (m.radar && m.radar.arquivo) || '',
+    posicaoTexto: 'posição ' + fmtData(R.posicao),
+    total: base.length, inad: inad.length,
+    emRisco30: em30.length, mrrRisco30: mrr30,
+    mrrTotal: base.reduce((t,r)=>t+r.mrr, 0),
+    atualizado: Date.now(),
+  };
+  salvar();
+
+  $('#radar-kpis').innerHTML = `
+    <div class="kpi"><div class="rot">Clientes na análise</div><div class="val">${base.length.toLocaleString('pt-BR')}</div><div class="pe">contratos que ainda podem virar churn</div></div>
+    <div class="kpi risco"><div class="rot">Suspensos por inadimplência</div><div class="val">${inad.length.toLocaleString('pt-BR')}</div><div class="pe">${brl(inad.reduce((t,r)=>t+r.mrr,0),2)} em MRR — prioridade máxima</div></div>
+    <div class="kpi alerta"><div class="rot">Churn nos próximos 30 dias</div><div class="val">${em30.length.toLocaleString('pt-BR')}</div><div class="pe">${brl(mrr30,2)} em MRR</div></div>
+    <div class="kpi ok"><div class="rot">MRR total na análise</div><div class="val">${brl(m.radar.mrrTotal)}</div><div class="pe">posição de ${fmtData(R.posicao)}</div></div>`;
+
+  const grupos = {};
+  base.forEach(r=>{
+    if(!r.churn) return;
+    const ch = r.churn < R.posicao ? 'Já vencido' : r.churn.getFullYear() + '-' + String(r.churn.getMonth()+1).padStart(2,'0');
+    grupos[ch] = grupos[ch] || {n:0, mrr:0};
+    grupos[ch].n++; grupos[ch].mrr += r.mrr;
+  });
+  const chaves = Object.keys(grupos).sort((a,b)=> a === 'Já vencido' ? -1 : b === 'Já vencido' ? 1 : a.localeCompare(b)).slice(0,14);
+  const maior = Math.max(1, ...chaves.map(k => grupos[k].n));
+  $('#radar-barras').innerHTML = chaves.map(k=>{
+    const rot = k === 'Já vencido' ? 'Já vencido' : nomeMesCurto(k);
+    const g = grupos[k];
+    return `<div class="barra"><span>${rot}</span>
+      <div class="trilho"><div class="preench" style="width:${g.n/maior*100}%;${k === 'Já vencido' ? 'background:var(--bad)' : ''}"></div></div>
+      <span style="text-align:right">${g.n} · ${brl(g.mrr)}</span></div>`;
+  }).join('') || '<p class="vazio-msg">Sem datas de churn nos filtros atuais.</p>';
+
+  $('#t-radar tbody').innerHTML = lista.slice(0,600).map(r=>`<tr>
+    <td><b>${esc(r.nome)}</b></td><td>${fmtDoc(r.doc)}</td><td>${esc(r.id)||'—'}</td><td>${esc(r.tipo)||'—'}</td>
+    <td>${tagStatus(r.statusContrato, r.scNorm)}</td><td>${brl(r.mrr,2)}</td>
+    <td>${fmtData(r.ativacao)}</td><td>${fmtData(r.expira)}</td>
+    <td><b>${fmtData(r.churn)}</b>${r.derivada ? ' <span style="color:var(--ink-2)">*</span>' : ''}</td>
+    <td>${r.dias == null ? '—' : r.dias}</td><td><span class="tag ${r.urg.cls}">${r.urg.rot}</span></td></tr>`).join('')
+    || '<tr><td colspan="11" class="vazio-msg">Nenhum cliente com os filtros atuais.</td></tr>';
+
+  $('#radar-rodape').innerHTML = `Mostrando ${Math.min(lista.length,600).toLocaleString('pt-BR')} de ${lista.length.toLocaleString('pt-BR')} clientes filtrados`
+    + (lista.length > 600 ? ' (limite de 600 na tela; o CSV baixa a lista inteira).' : '.')
+    + ' “Dias” conta a partir da data de posição. O asterisco marca datas calculadas como expiração + 30 dias.';
+  const pino = $('#pino-radar'); pino.textContent = em30.length; pino.classList.remove('oculto');
+  renderRadarPainel(m);
+}
+function renderRadarPainel(m){
+  const pino = $('#pino-radar');
+  if(m.radar){ pino.textContent = m.radar.emRisco30; pino.classList.remove('oculto'); }
+  else if(!R.linhas.length) pino.classList.add('oculto');
+}
+$('#btn-export').addEventListener('click', ()=>{
+  const lista = listaFiltrada();
+  const cab = ['Prioridade','Nome','Documento','Cliente ID','Tipo Cliente','Status','Status Contrato','MRR (R$)','Ativacao Contrato','Expiracao Contrato','Data do Churn','Dias ate o churn','Urgencia','Contato feito em','Resultado'];
+  const linhas = lista.map((r,i)=>[i+1, r.nome, fmtDoc(r.doc), r.id, r.tipo, r.status, r.statusContrato,
+    String(r.mrr.toFixed(2)).replace('.',','), fmtData(r.ativacao), fmtData(r.expira), fmtData(r.churn), r.dias == null ? '' : r.dias, r.urg.rot, '', '']);
+  baixar('radar-pre-churn-' + $('#i-posicao').value + '.csv',
+    '\uFEFF' + [cab, ...linhas].map(l => l.map(c => `"${String(c == null ? '' : c).replace(/"/g,'""')}"`).join(';')).join('\r\n'),
+    'text/csv;charset=utf-8');
+});
+$('#btn-usar-radar').addEventListener('click', ()=>{
+  const em30 = filtrar().filter(r => r.dias != null && r.dias <= 30);
+  M().p.radarPreChurn = em30.length;
+  M().novo = false;
+  render();
+  $('#tab-plano').click();
+  toast(em30.length + ' clientes em risco enviados para o plano');
+});
+
+/* ============================================================
+   13. IMPRESSÃO, BACKUP E RESTAURAÇÃO
+   ============================================================ */
+function baixar(nome, conteudo, tipo){
+  const url = URL.createObjectURL(new Blob([conteudo], {type:tipo}));
+  const a = document.createElement('a');
+  a.href = url; a.download = nome; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+const menuImp = $('#menu-imprimir');
+function fecharMenu(){ menuImp.classList.add('oculto'); $('#btn-imprimir').setAttribute('aria-expanded','false'); }
+$('#btn-imprimir').addEventListener('click', e=>{
+  e.stopPropagation();
+  const abrir = menuImp.classList.contains('oculto');
+  menuImp.classList.toggle('oculto', !abrir);
+  $('#btn-imprimir').setAttribute('aria-expanded', String(abrir));
+});
+document.addEventListener('click', e=>{ if(!menuImp.contains(e.target)) fecharMenu(); });
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') fecharMenu(); });
+$$('#menu-imprimir button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    fecharMenu();
+    const bruto = b.dataset.alvos;
+    const alvos = bruto === 'atual' ? [$$('.painel').find(p => p.classList.contains('ativo')).id] : bruto.split(',');
+    alvos.forEach(id => $('#'+id).classList.add('imprimir'));
+    const limpar = ()=>{ $$('.painel').forEach(p => p.classList.remove('imprimir')); window.removeEventListener('afterprint', limpar); };
+    window.addEventListener('afterprint', limpar);
+    setTimeout(()=>{ window.print(); setTimeout(limpar, 900); }, 60);
+  });
+});
+$('#btn-backup').addEventListener('click', ()=>{
+  baixar('arvore-alavancas-' + (A.franquia||'franquia').replace(/\W+/g,'-').toLowerCase() + '-' + new Date().toISOString().slice(0,10) + '.json',
+    JSON.stringify(A, null, 2), 'application/json');
+  toast('Backup baixado');
+});
+$('#btn-zerar').addEventListener('click', async ()=>{
+  const ok = await perguntar('Apagar tudo e começar do zero?',
+    'Todos os meses, realizados, premissas e metas salvos neste navegador serão perdidos.\n\nSe quiser guardar uma cópia, cancele e clique em Backup antes.', 'Apagar tudo');
+  if(!ok) return;
+  try{ localStorage.removeItem(CHAVE); }catch(e){}
+  A = estadoInicial();
+  salvarAgora(); render(); $('#tab-plano').click();
+  toast('Tudo zerado — comece preenchendo a franquia e as metas');
+});
+$('#btn-restaurar').addEventListener('click', ()=>$('#arq-backup').click());
+$('#arq-backup').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const fr = new FileReader();
+  fr.onload = async ev => {
+    let novo;
+    try{
+      novo = JSON.parse(ev.target.result);
+      if(!novo || !novo.meses) throw new Error('o arquivo não tem meses salvos');
+    }catch(err){ avisar('Não consegui ler este backup', err.message); return; }
+    const ok = await perguntar('Restaurar este backup?',
+      'Os dados atuais deste navegador serão substituídos pelos ' + Object.keys(novo.meses).length + ' mês(es) do arquivo.', 'Restaurar');
+    if(!ok) return;
+    A = novo; A.niveis = A.niveis || JSON.parse(JSON.stringify(NIVEIS));
+    Object.values(A.meses).forEach(m=>{ if(!m.niveis) m.niveis = JSON.parse(JSON.stringify(A.niveis)); });
+    if(!A.meses[A.mesAtual]) A.mesAtual = Object.keys(A.meses).sort().pop();
+    render(); toast('Backup restaurado');
+  };
+  fr.readAsText(f);
+});
+
+/* ============================================================
+   14. INÍCIO
+   ============================================================ */
+A = carregar();
+if(!A.meses[A.mesAtual]) A.mesAtual = Object.keys(A.meses).sort().pop();
+render();
+if(!disco.ok){
+  $('#salvo').classList.add('erro');
+  $('#salvo').textContent = 'Este navegador bloqueia memória local — use Backup';
+}
+</script>
+</body>
+</html>
